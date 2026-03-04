@@ -1,6 +1,7 @@
 package com.dylanclarke.FleetManagementAPI.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
 @Entity
@@ -11,26 +12,34 @@ public class Vehicle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Title cannot be blank")
     private String title;
+
+    @NotBlank(message = "Make cannot be blank")
     private String make;
+
+    @NotBlank(message = "Model cannot be blank")
     private String model;
 
-    // ✅ FIX: Rename column to avoid SQL reserved keyword conflict
     @Column(name = "vehicle_year", nullable = false)
+    @Min(value = 1886, message = "Vehicle year must be 1886 or later")
     private int vehicleYear;
 
+    @NotBlank(message = "Location cannot be blank")
     private String location;
 
     @Column(name = "maintenance_alerts_enabled")
     private boolean maintenanceAlertsEnabled;
 
-    @Column(name = "start_date")
+    @NotNull(message = "Start date is required")
     private LocalDate startDate;
 
-    @Column(name = "end_date")
+    @NotNull(message = "End date is required")
     private LocalDate endDate;
 
+    // -------------------------------
     // Constructors
+    // -------------------------------
     public Vehicle() {}
 
     public Vehicle(String title, String make, String model, int vehicleYear,
@@ -46,7 +55,9 @@ public class Vehicle {
         this.endDate = endDate;
     }
 
+    // -------------------------------
     // Getters & Setters
+    // -------------------------------
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
