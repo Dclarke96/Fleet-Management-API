@@ -26,17 +26,20 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
+
     // --- Database Drivers ---
     runtimeOnly("com.h2database:h2")              // In-memory dev/test DB
     runtimeOnly("com.mysql:mysql-connector-j")   // Production DB option
 
     // --- Lombok ---
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
+    compileOnly("org.projectlombok:lombok:1.18.32")
+    annotationProcessor("org.projectlombok:lombok:1.18.32")
 
     // --- Testing ---
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("com.jayway.jsonpath:json-path:2.8.0")
 }
 
 tasks.withType<Test> {

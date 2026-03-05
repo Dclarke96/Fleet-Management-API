@@ -2,6 +2,7 @@ package com.dylanclarke.FleetManagementAPI.controller;
 
 import com.dylanclarke.FleetManagementAPI.model.Vehicle;
 import com.dylanclarke.FleetManagementAPI.service.VehicleService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,16 +37,24 @@ public class VehicleController {
     }
 
     // ----------------------------------------
+    // SEARCH
+    // ----------------------------------------
+    @GetMapping("/search")
+    public List<Vehicle> searchVehicles(@RequestParam("q") String query) {
+        return service.searchVehicles(query);
+    }
+
+    // ----------------------------------------
     // CREATE
     // ----------------------------------------
     @PostMapping
-    public ResponseEntity<Vehicle> createVehicle(@RequestBody Vehicle vehicle) {
-        try {
-            Vehicle created = service.addVehicle(vehicle);
-            return ResponseEntity.ok(created);
-        } catch (IllegalArgumentException e) {
+    public ResponseEntity<Vehicle> createVehicle(@Valid @RequestBody Vehicle vehicle) {
+        // Validation: endDate must not be before startDate
+        if (vehicle.getEndDate().isBefore(vehicle.getStartDate())) {
             return ResponseEntity.badRequest().build();
         }
+        Vehicle created = service.addVehicle(vehicle);
+        return ResponseEntity.ok(created);
     }
 
     // ----------------------------------------
@@ -53,13 +62,13 @@ public class VehicleController {
     // ----------------------------------------
     @PutMapping("/{id}")
     public ResponseEntity<Vehicle> updateVehicle(@PathVariable Long id,
-                                                 @RequestBody Vehicle vehicle) {
-        try {
-            Vehicle updated = service.updateVehicle(id, vehicle);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
+                                                 @Valid @RequestBody Vehicle vehicle) {
+        // Validation: endDate must not be before startDate
+        if (vehicle.getEndDate().isBefore(vehicle.getStartDate())) {
+            return ResponseEntity.badRequest().build();
         }
+        Vehicle updated = service.updateVehicle(id, vehicle);
+        return ResponseEntity.ok(updated);
     }
 
     // ----------------------------------------

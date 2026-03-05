@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@SuppressWarnings("null")
 public class MaintenanceService {
 
     private final MaintenanceRepository maintenanceRepository;
