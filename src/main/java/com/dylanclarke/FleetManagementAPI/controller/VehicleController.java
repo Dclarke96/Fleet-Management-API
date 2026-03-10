@@ -1,8 +1,11 @@
 package com.dylanclarke.FleetManagementAPI.controller;
 
-import com.dylanclarke.FleetManagementAPI.model.Vehicle;
+import com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO;
+import com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO;
 import com.dylanclarke.FleetManagementAPI.service.VehicleService;
+
 import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +25,7 @@ public class VehicleController {
     // GET ALL
     // ----------------------------------------
     @GetMapping
-    public List<Vehicle> getAllVehicles() {
+    public List<VehicleResponseDTO> getAllVehicles() {
         return service.getAllVehicles();
     }
 
@@ -30,7 +33,7 @@ public class VehicleController {
     // GET BY ID
     // ----------------------------------------
     @GetMapping("/{id}")
-    public ResponseEntity<Vehicle> getVehicle(@PathVariable Long id) {
+    public ResponseEntity<VehicleResponseDTO> getVehicle(@PathVariable Long id) {
         return service.getVehicleById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -40,7 +43,7 @@ public class VehicleController {
     // SEARCH
     // ----------------------------------------
     @GetMapping("/search")
-    public List<Vehicle> searchVehicles(@RequestParam("q") String query) {
+    public List<VehicleResponseDTO> searchVehicles(@RequestParam("q") String query) {
         return service.searchVehicles(query);
     }
 
@@ -48,12 +51,10 @@ public class VehicleController {
     // CREATE
     // ----------------------------------------
     @PostMapping
-    public ResponseEntity<Vehicle> createVehicle(@Valid @RequestBody Vehicle vehicle) {
-        // Validation: endDate must not be before startDate
-        if (vehicle.getEndDate().isBefore(vehicle.getStartDate())) {
-            return ResponseEntity.badRequest().build();
-        }
-        Vehicle created = service.addVehicle(vehicle);
+    public ResponseEntity<VehicleResponseDTO> createVehicle(
+            @Valid @RequestBody VehicleRequestDTO request) {
+
+        VehicleResponseDTO created = service.addVehicle(request);
         return ResponseEntity.ok(created);
     }
 
@@ -61,13 +62,11 @@ public class VehicleController {
     // UPDATE
     // ----------------------------------------
     @PutMapping("/{id}")
-    public ResponseEntity<Vehicle> updateVehicle(@PathVariable Long id,
-                                                 @Valid @RequestBody Vehicle vehicle) {
-        // Validation: endDate must not be before startDate
-        if (vehicle.getEndDate().isBefore(vehicle.getStartDate())) {
-            return ResponseEntity.badRequest().build();
-        }
-        Vehicle updated = service.updateVehicle(id, vehicle);
+    public ResponseEntity<VehicleResponseDTO> updateVehicle(
+            @PathVariable Long id,
+            @Valid @RequestBody VehicleRequestDTO request) {
+
+        VehicleResponseDTO updated = service.updateVehicle(id, request);
         return ResponseEntity.ok(updated);
     }
 

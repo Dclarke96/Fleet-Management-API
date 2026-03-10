@@ -47,17 +47,23 @@ class VehicleServiceTest {
 
         when(repository.save(any(Vehicle.class))).thenReturn(vehicle);
 
-        Vehicle saved = service.addVehicle(vehicle);
+        com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO req = new com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO();
+        req.setTitle("Truck 1");
+        req.setMake("Ford");
+        req.setModel("F-150");
+        req.setYear(2020);
+
+        com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO saved = service.addVehicle(req);
 
         assertEquals("Truck 1", saved.getTitle());
-        verify(repository, times(1)).save(vehicle);
+        verify(repository, times(1)).save(any(Vehicle.class));
     }
 
     @Test
     void shouldReturnAllVehicles() {
         Vehicle a = new Vehicle("T","M","D",2021,"L",false,LocalDate.now(),LocalDate.now());
         when(repository.findAll()).thenReturn(List.of(a));
-        List<Vehicle> result = service.getAllVehicles();
+        List<com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO> result = service.getAllVehicles();
         assertEquals(1, result.size());
     }
 
@@ -65,27 +71,35 @@ class VehicleServiceTest {
     void shouldGetByIdWhenExists() {
         Vehicle a = new Vehicle("T","M","D",2021,"L",false,LocalDate.now(),LocalDate.now());
         when(repository.findById(5L)).thenReturn(Optional.of(a));
-        Optional<Vehicle> got = service.getVehicleById(5L);
+        Optional<com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO> got = service.getVehicleById(5L);
         assertEquals(true, got.isPresent());
     }
 
     @Test
     void updateNonexistentThrows() {
         when(repository.findById(10L)).thenReturn(Optional.empty());
-        Vehicle v = new Vehicle("T","M","D",2021,"L",false,LocalDate.now(),LocalDate.now());
-        assertThrows(IllegalArgumentException.class, () -> service.updateVehicle(10L, v));
+        com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO r = new com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO();
+        r.setTitle("T");
+        IllegalArgumentException thrown1 = assertThrows(IllegalArgumentException.class, () -> service.updateVehicle(10L, r));
+        //noinspection unused
+        String ignore1 = thrown1.getMessage();
     }
 
     @Test
     void deleteNonexistentThrows() {
         when(repository.findById(11L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> service.deleteVehicle(11L));
+        IllegalArgumentException thrown2 = assertThrows(IllegalArgumentException.class, () -> service.deleteVehicle(11L));
+        //noinspection unused
+        String ignore2 = thrown2.getMessage();
     }
 
     @Test
     void addVehicleValidationFails() {
-        Vehicle bad = new Vehicle(null, "", "", 1800, "", false, null, null);
-        assertThrows(IllegalArgumentException.class, () -> service.addVehicle(bad));
+        com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO bad = new com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO();
+        // leave required fields blank
+        IllegalArgumentException thrown3 = assertThrows(IllegalArgumentException.class, () -> service.addVehicle(bad));
+        //noinspection unused
+        String ignore3 = thrown3.getMessage();
     }
 
     @Test
@@ -93,7 +107,7 @@ class VehicleServiceTest {
         String q = "foo";
         Vehicle v = new Vehicle("T","M","D",2021,"L",false,LocalDate.now(),LocalDate.now());
         when(repository.searchVehicles(q)).thenReturn(List.of(v));
-        List<Vehicle> result = service.searchVehicles(q);
+        List<com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO> result = service.searchVehicles(q);
         assertEquals(1, result.size());
     }
 }

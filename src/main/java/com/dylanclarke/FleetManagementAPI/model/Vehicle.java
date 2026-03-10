@@ -15,6 +15,12 @@ public class Vehicle {
     @NotBlank(message = "Title cannot be blank")
     private String title;
 
+    @Size(max = 17, message = "VIN must be 17 characters or less")
+    private String vin;
+
+    @Size(max = 10, message = "License plate must be 10 characters or less")
+    private String licensePlate;
+
     @NotBlank(message = "Make cannot be blank")
     private String make;
 
@@ -55,6 +61,22 @@ public class Vehicle {
         this.endDate = endDate;
     }
 
+    // convenience constructor with new fields
+    public Vehicle(String title, String vin, String licensePlate, String make, String model, int vehicleYear,
+                   String location, boolean maintenanceAlertsEnabled,
+                   LocalDate startDate, LocalDate endDate) {
+        this.title = title;
+        this.vin = vin;
+        this.licensePlate = licensePlate;
+        this.make = make;
+        this.model = model;
+        this.vehicleYear = vehicleYear;
+        this.location = location;
+        this.maintenanceAlertsEnabled = maintenanceAlertsEnabled;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
     // -------------------------------
     // Getters & Setters
     // -------------------------------
@@ -63,6 +85,12 @@ public class Vehicle {
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    public String getVin() { return vin; }
+    public void setVin(String vin) { this.vin = vin; }
+
+    public String getLicensePlate() { return licensePlate; }
+    public void setLicensePlate(String licensePlate) { this.licensePlate = licensePlate; }
 
     public String getMake() { return make; }
     public void setMake(String make) { this.make = make; }

@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.3.5"
+    id("org.springframework.boot") version "3.4.2"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -32,9 +32,6 @@ dependencies {
     runtimeOnly("com.h2database:h2")              // In-memory dev/test DB
     runtimeOnly("com.mysql:mysql-connector-j")   // Production DB option
 
-    // --- Lombok ---
-    compileOnly("org.projectlombok:lombok:1.18.32")
-    annotationProcessor("org.projectlombok:lombok:1.18.32")
 
     // --- Testing ---
     testImplementation("org.springframework.boot:spring-boot-starter-test")

@@ -7,39 +7,39 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-
-import java.time.LocalDate;
-
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(VehicleController.class)
 @Import(SecurityConfig.class)
+@ExtendWith(MockitoExtension.class)
 @SuppressWarnings({"null","unused"})
 class VehicleControllerWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private VehicleService vehicleService;
 
     private ObjectMapper objectMapper;
@@ -55,20 +55,16 @@ class VehicleControllerWebMvcTest {
     @SuppressWarnings("null")
     void shouldCreateVehicle() throws Exception {
 
-        // Mocked Vehicle returned by the service
-        Vehicle returnedVehicle = new Vehicle(
-                "Test Vehicle",
-                "Toyota",
-                "Corolla",
-                2021,
-                "Garage",
-                false,
-                LocalDate.of(2026, 3, 1),
-                LocalDate.of(2026, 12, 31)
-        );
+        // Mocked response DTO returned by the service
+        com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO returnedVehicle = new com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO();
         returnedVehicle.setId(1L);
+        returnedVehicle.setTitle("Test Vehicle");
+        returnedVehicle.setMake("Toyota");
+        returnedVehicle.setModel("Corolla");
+        returnedVehicle.setYear(2021);
 
-        when(vehicleService.addVehicle(any(Vehicle.class))).thenReturn(returnedVehicle);
+        when(vehicleService.addVehicle(any(com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO.class)))
+                .thenReturn(returnedVehicle);
 
         // JSON payload for POST (no id field)
         String vehicleJson = """
@@ -102,10 +98,12 @@ class VehicleControllerWebMvcTest {
     @Test
     @WithMockUser
     void shouldGetAllVehicles() throws Exception {
-        Vehicle v1 = new Vehicle("A","B","C",2020,"X",false,LocalDate.now(),LocalDate.now());
+        com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO v1 = new com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO();
         v1.setId(1L);
-        Vehicle v2 = new Vehicle("D","E","F",2021,"Y",false,LocalDate.now(),LocalDate.now());
+        v1.setTitle("A");
+        com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO v2 = new com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO();
         v2.setId(2L);
+        v2.setTitle("D");
         when(vehicleService.getAllVehicles()).thenReturn(List.of(v1, v2));
 
         mockMvc.perform(get("/api/vehicles"))
@@ -126,9 +124,11 @@ class VehicleControllerWebMvcTest {
     @Test
     @WithMockUser
     void shouldUpdateVehicle() throws Exception {
-        Vehicle updated = new Vehicle("U","M","D",2022,"Z",true,LocalDate.now(),LocalDate.now());
+        com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO updated = new com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO();
         updated.setId(3L);
-        when(vehicleService.updateVehicle(eq(3L), any(Vehicle.class))).thenReturn(updated);
+        updated.setTitle("U");
+        when(vehicleService.updateVehicle(eq(3L), any(com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO.class)))
+                .thenReturn(updated);
 
         String json = objectMapper.writeValueAsString(updated);
 
@@ -164,7 +164,7 @@ class VehicleControllerWebMvcTest {
     @Test
     @WithMockUser
     void shouldSearchVehicles() throws Exception {
-        Vehicle v = new Vehicle("S","S","S",2023,"L",false,LocalDate.now(),LocalDate.now());
+        com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO v = new com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO();
         v.setId(10L);
         when(vehicleService.searchVehicles("test")).thenReturn(List.of(v));
 
