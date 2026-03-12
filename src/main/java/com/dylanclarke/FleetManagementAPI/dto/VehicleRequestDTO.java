@@ -2,7 +2,11 @@ package com.dylanclarke.FleetManagementAPI.dto;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class VehicleRequestDTO {
 
@@ -13,12 +17,18 @@ public class VehicleRequestDTO {
 
     private String licensePlate;
 
+    @NotBlank(message = "Make cannot be blank")
     private String make;
 
+    @NotBlank(message = "Model cannot be blank")
     private String model;
 
+    @NotNull(message = "Year cannot be null")
+    @JsonProperty("vehicleYear")
+    @JsonAlias("vehicleYear")
     private Integer year;
 
+    @NotBlank(message = "Location cannot be blank")
     private String location;
 
     private Boolean maintenanceAlertsEnabled;

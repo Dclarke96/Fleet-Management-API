@@ -54,8 +54,12 @@ public class VehicleController {
     public ResponseEntity<VehicleResponseDTO> createVehicle(
             @Valid @RequestBody VehicleRequestDTO request) {
 
-        VehicleResponseDTO created = service.addVehicle(request);
-        return ResponseEntity.ok(created);
+        try {
+            VehicleResponseDTO created = service.addVehicle(request);
+            return ResponseEntity.ok(created);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     // ----------------------------------------

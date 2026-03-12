@@ -2,6 +2,9 @@ package com.dylanclarke.FleetManagementAPI.dto;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class VehicleResponseDTO {
 
     private Long id;
@@ -16,7 +19,9 @@ public class VehicleResponseDTO {
 
     private String model;
 
-    private Integer year;
+    @JsonProperty("vehicleYear")
+    @JsonAlias("vehicleYear")
+    private Integer vehicleYear;
 
     private String location;
 
@@ -76,12 +81,12 @@ public class VehicleResponseDTO {
         this.model = model;
     }
 
-    public Integer getYear() {
-        return year;
+    public Integer getVehicleYear() {
+        return vehicleYear;
     }
 
-    public void setYear(Integer year) {
-        this.year = year;
+    public void setVehicleYear(Integer vehicleYear) {
+        this.vehicleYear = vehicleYear;
     }
 
     public String getLocation() {

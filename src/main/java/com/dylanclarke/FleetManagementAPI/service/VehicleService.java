@@ -104,7 +104,7 @@ public class VehicleService {
         dto.setLicensePlate(v.getLicensePlate());
         dto.setMake(v.getMake());
         dto.setModel(v.getModel());
-        dto.setYear(v.getVehicleYear());
+        dto.setVehicleYear(v.getVehicleYear());
 
         dto.setLocation(v.getLocation());
         dto.setMaintenanceAlertsEnabled(v.isMaintenanceAlertsEnabled());
@@ -129,7 +129,7 @@ public class VehicleService {
         }
 
         v.setLocation(dto.getLocation());
-        v.setMaintenanceAlertsEnabled(dto.getMaintenanceAlertsEnabled());
+        v.setMaintenanceAlertsEnabled(dto.getMaintenanceAlertsEnabled() != null ? dto.getMaintenanceAlertsEnabled() : false);
         v.setStartDate(dto.getStartDate());
         v.setEndDate(dto.getEndDate());
 
@@ -146,7 +146,7 @@ public class VehicleService {
 
         if (dto.getYear() != null) {
             vehicle.setVehicleYear(dto.getYear());
-}
+        }
 
         vehicle.setLocation(dto.getLocation());
         vehicle.setMaintenanceAlertsEnabled(dto.getMaintenanceAlertsEnabled());

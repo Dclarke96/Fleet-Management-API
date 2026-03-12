@@ -52,6 +52,10 @@ class VehicleServiceTest {
         req.setMake("Ford");
         req.setModel("F-150");
         req.setYear(2020);
+        req.setLocation("Yard");
+        req.setMaintenanceAlertsEnabled(false);
+        req.setStartDate(LocalDate.now());
+        req.setEndDate(LocalDate.now().plusDays(30));
 
         com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO saved = service.addVehicle(req);
 
