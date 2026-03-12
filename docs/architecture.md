@@ -49,3 +49,7 @@ DTOs **decouple API representation from internal entity structure** for better m
   - `@NotBlank` for required fields
   - `@Size` for string length limits
   - `@Min` for numeric minimums
+
+## Architecture Diagram
+
+![Architecture Diagram](docs/assets/architecture.png)
