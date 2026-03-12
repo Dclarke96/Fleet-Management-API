@@ -52,4 +52,4 @@ DTOs **decouple API representation from internal entity structure** for better m
 
 ## Architecture Diagram
 
-![Architecture Diagram](docs/assets/architecture.png)
+![Architecture Diagram](docs/architecture.png)
