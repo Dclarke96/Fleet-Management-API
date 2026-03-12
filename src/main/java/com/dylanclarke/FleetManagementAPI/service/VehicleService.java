@@ -8,10 +8,13 @@ import org.springframework.stereotype.Service;
 
 import com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO;
+import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
+import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
 import com.dylanclarke.FleetManagementAPI.model.Vehicle;
 import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
 
 @Service
+@SuppressWarnings("null")
 public class VehicleService {
 
     private final VehicleRepository repository;
@@ -68,7 +71,7 @@ public class VehicleService {
     public VehicleResponseDTO updateVehicle(Long id, VehicleRequestDTO dto) {
 
         Vehicle existing = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Vehicle not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", id));
 
         updateEntityFromDto(existing, dto);
 
@@ -85,7 +88,7 @@ public class VehicleService {
     public void deleteVehicle(Long id) {
 
         Vehicle vehicle = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Vehicle not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", id));
 
         repository.delete(vehicle);
     }
@@ -162,25 +165,25 @@ public class VehicleService {
 
         if (vehicle.getMake() == null || vehicle.getMake().isEmpty() ||
             vehicle.getModel() == null || vehicle.getModel().isEmpty()) {
-            throw new IllegalArgumentException("Make and model are required");
+            throw new ValidationException("Make and model are required");
         }
 
         int currentYear = LocalDate.now().getYear();
 
         if (vehicle.getVehicleYear() < 1900 || vehicle.getVehicleYear() > currentYear) {
-            throw new IllegalArgumentException(
-                    "Year must be between 1900 and " + currentYear);
+            throw new ValidationException(
+                    "Year must be between 1900 and " + currentYear, "vehicleYear", vehicle.getVehicleYear());
         }
 
         LocalDate start = vehicle.getStartDate();
         LocalDate end = vehicle.getEndDate();
 
         if (start == null) {
-            throw new IllegalArgumentException("Start date is required");
+            throw new ValidationException("Start date is required", "startDate", null);
         }
 
         if (end != null && end.isBefore(start)) {
-            throw new IllegalArgumentException("End date cannot be before start date");
+            throw new ValidationException("End date cannot be before start date", "endDate", end);
         }
     }
 }

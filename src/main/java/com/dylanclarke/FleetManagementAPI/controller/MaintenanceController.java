@@ -2,6 +2,7 @@ package com.dylanclarke.FleetManagementAPI.controller;
 
 import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
 import com.dylanclarke.FleetManagementAPI.service.MaintenanceService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,16 +37,16 @@ public class MaintenanceController {
     public ResponseEntity<MaintenanceRecord> addMaintenance(
             @PathVariable Long vehicleId,
             @RequestBody MaintenanceRecord record) {
-
         MaintenanceRecord saved = maintenanceService.addMaintenance(record, vehicleId);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(saved);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<MaintenanceRecord> updateMaintenance(
             @PathVariable Long id,
             @RequestBody MaintenanceRecord record) {
-
         MaintenanceRecord updated = maintenanceService.updateMaintenance(id, record);
         return ResponseEntity.ok(updated);
     }

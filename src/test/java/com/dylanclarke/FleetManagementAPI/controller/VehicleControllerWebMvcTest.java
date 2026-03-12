@@ -1,6 +1,7 @@
 package com.dylanclarke.FleetManagementAPI.controller;
 
 import com.dylanclarke.FleetManagementAPI.config.SecurityConfig;
+import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
 import com.dylanclarke.FleetManagementAPI.model.Vehicle;
 import com.dylanclarke.FleetManagementAPI.service.VehicleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -84,7 +85,7 @@ class VehicleControllerWebMvcTest {
         mockMvc.perform(post("/api/vehicles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(vehicleJson))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())           // check ID exists
                 .andExpect(jsonPath("$.title").value("Test Vehicle"))
                 .andExpect(jsonPath("$.make").value("Toyota"))
@@ -165,7 +166,7 @@ class VehicleControllerWebMvcTest {
         """;
 
         when(vehicleService.addVehicle(any(com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO.class)))
-                .thenThrow(new IllegalArgumentException("End date cannot be before start date"));
+                .thenThrow(new ValidationException("End date cannot be before start date", "endDate", null));
 
         mockMvc.perform(post("/api/vehicles")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -6,6 +6,7 @@ import com.dylanclarke.FleetManagementAPI.service.VehicleService;
 
 import jakarta.validation.Valid;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,13 +54,10 @@ public class VehicleController {
     @PostMapping
     public ResponseEntity<VehicleResponseDTO> createVehicle(
             @Valid @RequestBody VehicleRequestDTO request) {
-
-        try {
-            VehicleResponseDTO created = service.addVehicle(request);
-            return ResponseEntity.ok(created);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        VehicleResponseDTO created = service.addVehicle(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(created);
     }
 
     // ----------------------------------------
@@ -69,7 +67,6 @@ public class VehicleController {
     public ResponseEntity<VehicleResponseDTO> updateVehicle(
             @PathVariable Long id,
             @Valid @RequestBody VehicleRequestDTO request) {
-
         VehicleResponseDTO updated = service.updateVehicle(id, request);
         return ResponseEntity.ok(updated);
     }
@@ -79,11 +76,7 @@ public class VehicleController {
     // ----------------------------------------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVehicle(@PathVariable Long id) {
-        try {
-            service.deleteVehicle(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        service.deleteVehicle(id);
+        return ResponseEntity.noContent().build();
     }
 }

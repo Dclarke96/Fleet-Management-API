@@ -17,6 +17,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
+import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
 import com.dylanclarke.FleetManagementAPI.model.Vehicle;
 import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
 
@@ -84,7 +86,7 @@ class VehicleServiceTest {
         when(repository.findById(10L)).thenReturn(Optional.empty());
         com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO r = new com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO();
         r.setTitle("T");
-        IllegalArgumentException thrown1 = assertThrows(IllegalArgumentException.class, () -> service.updateVehicle(10L, r));
+        ResourceNotFoundException thrown1 = assertThrows(ResourceNotFoundException.class, () -> service.updateVehicle(10L, r));
         //noinspection unused
         String ignore1 = thrown1.getMessage();
     }
@@ -92,7 +94,7 @@ class VehicleServiceTest {
     @Test
     void deleteNonexistentThrows() {
         when(repository.findById(11L)).thenReturn(Optional.empty());
-        IllegalArgumentException thrown2 = assertThrows(IllegalArgumentException.class, () -> service.deleteVehicle(11L));
+        ResourceNotFoundException thrown2 = assertThrows(ResourceNotFoundException.class, () -> service.deleteVehicle(11L));
         //noinspection unused
         String ignore2 = thrown2.getMessage();
     }
@@ -101,7 +103,7 @@ class VehicleServiceTest {
     void addVehicleValidationFails() {
         com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO bad = new com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO();
         // leave required fields blank
-        IllegalArgumentException thrown3 = assertThrows(IllegalArgumentException.class, () -> service.addVehicle(bad));
+        ValidationException thrown3 = assertThrows(ValidationException.class, () -> service.addVehicle(bad));
         //noinspection unused
         String ignore3 = thrown3.getMessage();
     }
