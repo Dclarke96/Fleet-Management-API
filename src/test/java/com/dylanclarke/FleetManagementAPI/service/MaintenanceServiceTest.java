@@ -1,88 +1,97 @@
 package com.dylanclarke.FleetManagementAPI.service;
 
-import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
-import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
-import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
-import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
-import com.dylanclarke.FleetManagementAPI.repository.MaintenanceRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
+import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
+import com.dylanclarke.FleetManagementAPI.model.Vehicle;
+import com.dylanclarke.FleetManagementAPI.repository.MaintenanceRepository;
+import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
 
 class MaintenanceServiceTest {
 
-    private MaintenanceRepository repository;
+    private MaintenanceRepository maintenanceRepository;
+    private VehicleRepository vehicleRepository;
     private MaintenanceService service;
 
     @BeforeEach
     void setup() {
-        repository = Mockito.mock(MaintenanceRepository.class);
-        service = new MaintenanceService(repository);
+        maintenanceRepository = mock(MaintenanceRepository.class);
+        vehicleRepository = mock(VehicleRepository.class);
+        service = new MaintenanceService(maintenanceRepository, vehicleRepository);
     }
 
     @Test
     void shouldSaveMaintenance() {
+        Vehicle vehicle = new Vehicle();
+        vehicle.setId(1L);
+        vehicle.setStartDate(LocalDate.now());
+        vehicle.setEndDate(LocalDate.now().plusDays(10));
+
         MaintenanceRecord record = new MaintenanceRecord();
-        record.setId(1L);
-        record.setVehicleId(1L);
         record.setDescription("Oil change");
-        record.setDate(LocalDate.parse("2026-03-01"));
-        record.setCost(49.99);
+        record.setServiceDate(LocalDate.now().plusDays(1));
+        record.setAlertsEnabled(true);
 
-        when(repository.save(any(MaintenanceRecord.class))).thenReturn(record);
+        MaintenanceRecord saved = new MaintenanceRecord();
+        saved.setId(1L);
+        saved.setDescription("Oil change");
+        saved.setServiceDate(record.getServiceDate());
+        saved.setAlertsEnabled(true);
+        saved.setVehicle(vehicle);
 
-        MaintenanceRequestDTO dto = new MaintenanceRequestDTO();
-        dto.setVehicleId(1L);
-        dto.setDescription("Oil change");
-        dto.setDate(LocalDate.parse("2026-03-01"));
-        dto.setCost(49.99);
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(vehicle));
+        when(maintenanceRepository.save(any(MaintenanceRecord.class))).thenReturn(saved);
 
-        MaintenanceResponseDTO response = service.addMaintenance(dto);
+        MaintenanceRecord result = service.addMaintenance(record, 1L);
 
-        assertEquals(1L, response.getId());
-        assertEquals("Oil change", response.getDescription());
+        assertEquals(1L, result.getId());
+        assertEquals("Oil change", result.getDescription());
     }
 
     @Test
     void shouldGetAllMaintenance() {
         MaintenanceRecord r1 = new MaintenanceRecord();
         r1.setId(1L);
-        r1.setVehicleId(1L);
-        r1.setDescription("Oil change");
+
         MaintenanceRecord r2 = new MaintenanceRecord();
         r2.setId(2L);
-        r2.setVehicleId(2L);
-        r2.setDescription("Tire rotation");
 
-        when(repository.findAll()).thenReturn(List.of(r1, r2));
+        when(maintenanceRepository.findAll()).thenReturn(List.of(r1, r2));
 
-        List<MaintenanceResponseDTO> results = service.getAllMaintenance();
+        List<MaintenanceRecord> results = service.getAllMaintenance();
 
         assertEquals(2, results.size());
     }
 
     @Test
     void shouldDeleteMaintenance() {
-        MaintenanceRecord r = new MaintenanceRecord();
-        r.setId(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(r));
-        doNothing().when(repository).deleteById(1L);
+        doNothing().when(maintenanceRepository).deleteById(1L);
 
         assertDoesNotThrow(() -> service.deleteMaintenance(1L));
-        verify(repository, times(1)).deleteById(1L);
+
+        verify(maintenanceRepository, times(1)).deleteById(1L);
     }
 
     @Test
     void shouldThrowOnMissingMaintenance() {
-        when(repository.findById(99L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> service.getMaintenanceById(99L));
+        when(maintenanceRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.getMaintenanceById(99L));
     }
 }

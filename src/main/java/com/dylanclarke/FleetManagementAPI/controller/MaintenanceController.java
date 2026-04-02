@@ -1,12 +1,21 @@
 package com.dylanclarke.FleetManagementAPI.controller;
 
-import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
-import com.dylanclarke.FleetManagementAPI.service.MaintenanceService;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
+import com.dylanclarke.FleetManagementAPI.service.MaintenanceService;
 
 @RestController
 @RequestMapping("/api/maintenance")
@@ -33,21 +42,26 @@ public class MaintenanceController {
         return maintenanceService.getMaintenanceById(id);
     }
 
-    @PostMapping("/vehicle/{vehicleId}")
+
+    @PostMapping
     public ResponseEntity<MaintenanceRecord> addMaintenance(
-            @PathVariable Long vehicleId,
+            @RequestParam("vehicleId") Long vehicleId,
             @RequestBody MaintenanceRecord record) {
-        MaintenanceRecord saved = maintenanceService.addMaintenance(record, vehicleId);
+
+        MaintenanceRecord created = maintenanceService.addMaintenance(record, vehicleId);
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(saved);
+                .body(created);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<MaintenanceRecord> updateMaintenance(
             @PathVariable Long id,
             @RequestBody MaintenanceRecord record) {
+
         MaintenanceRecord updated = maintenanceService.updateMaintenance(id, record);
+
         return ResponseEntity.ok(updated);
     }
 

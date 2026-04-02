@@ -1,13 +1,11 @@
 package com.dylanclarke.FleetManagementAPI.controller;
 
 import com.dylanclarke.FleetManagementAPI.config.SecurityConfig;
+import com.dylanclarke.FleetManagementAPI.exception.GlobalExceptionHandler;
 import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
+import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
 import com.dylanclarke.FleetManagementAPI.service.MaintenanceService;
-import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
-import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -19,19 +17,17 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @WebMvcTest(MaintenanceController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, com.dylanclarke.FleetManagementAPI.exception.GlobalExceptionHandler.class}) // ✅ FIX
 class MaintenanceControllerWebMvcTest {
 
     @Autowired
@@ -40,56 +36,44 @@ class MaintenanceControllerWebMvcTest {
     @MockBean
     private MaintenanceService maintenanceService;
 
-    private ObjectMapper objectMapper;
-
-    @BeforeEach
-    void setup() {
-        objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-    }
-
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN") 
     void shouldCreateMaintenance() throws Exception {
-        MaintenanceResponseDTO returned = new MaintenanceResponseDTO();
-        returned.setId(1L);
-        returned.setVehicleId(1L);
-        returned.setDescription("Oil change");
-        returned.setDate(LocalDate.parse("2026-03-01"));
-        returned.setCost(49.99);
 
-        when(maintenanceService.addMaintenance(any(MaintenanceRequestDTO.class)))
+        MaintenanceRecord returned = new MaintenanceRecord();
+        returned.setId(1L);
+        returned.setDescription("Oil change");
+        returned.setServiceDate(LocalDate.parse("2026-03-01"));
+        returned.setAlertsEnabled(true);
+
+        when(maintenanceService.addMaintenance(any(MaintenanceRecord.class), eq(1L)))
                 .thenReturn(returned);
 
         String json = """
             {
-              "vehicleId":1,
-              "description":"Oil change",
-              "date":"2026-03-01",
-              "cost":49.99
+              "description": "Oil change",
+              "serviceDate": "2026-03-01",
+              "alertsEnabled": true
             }
         """;
 
-        mockMvc.perform(post("/api/maintenance")
+        mockMvc.perform(post("/api/maintenance?vehicleId=1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.vehicleId").value(1))
+                .andDo(print())
+                .andExpect(status().isCreated()) // ✅ keep this
+                .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.description").value("Oil change"));
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void shouldGetAllMaintenance() throws Exception {
-        MaintenanceResponseDTO m1 = new MaintenanceResponseDTO();
+        MaintenanceRecord m1 = new MaintenanceRecord();
         m1.setId(1L);
-        m1.setVehicleId(1L);
-        m1.setDescription("Oil change");
-        MaintenanceResponseDTO m2 = new MaintenanceResponseDTO();
+
+        MaintenanceRecord m2 = new MaintenanceRecord();
         m2.setId(2L);
-        m2.setVehicleId(2L);
-        m2.setDescription("Tire rotation");
 
         when(maintenanceService.getAllMaintenance()).thenReturn(List.of(m1, m2));
 
@@ -100,28 +84,34 @@ class MaintenanceControllerWebMvcTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void shouldReturnNotFoundForMissingMaintenance() throws Exception {
-        when(maintenanceService.getMaintenanceById(99L)).thenReturn(Optional.empty());
+        when(maintenanceService.getMaintenanceById(99L))
+                .thenThrow(new com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException("Maintenance", "id", 99L));
 
         mockMvc.perform(get("/api/maintenance/99"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void shouldUpdateMaintenance() throws Exception {
-        MaintenanceResponseDTO updated = new MaintenanceResponseDTO();
-        updated.setId(3L);
-        updated.setVehicleId(1L);
-        updated.setDescription("Brake pads replaced");
-        updated.setDate(LocalDate.parse("2026-03-10"));
-        updated.setCost(150.0);
 
-        when(maintenanceService.updateMaintenance(eq(3L), any(MaintenanceRequestDTO.class)))
+        MaintenanceRecord updated = new MaintenanceRecord();
+        updated.setId(3L);
+        updated.setDescription("Brake pads replaced");
+        updated.setServiceDate(LocalDate.parse("2026-03-10"));
+
+        when(maintenanceService.updateMaintenance(eq(3L), any(MaintenanceRecord.class)))
                 .thenReturn(updated);
 
-        String json = objectMapper.writeValueAsString(updated);
+        String json = """
+            {
+              "description": "Brake pads replaced",
+              "serviceDate": "2026-03-10",
+              "alertsEnabled": true
+            }
+        """;
 
         mockMvc.perform(put("/api/maintenance/3")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -132,7 +122,7 @@ class MaintenanceControllerWebMvcTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void shouldDeleteMaintenance() throws Exception {
         doNothing().when(maintenanceService).deleteMaintenance(4L);
 
@@ -141,18 +131,24 @@ class MaintenanceControllerWebMvcTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMIN")
     void shouldRejectInvalidMaintenanceCreate() throws Exception {
+
+        when(maintenanceService.addMaintenance(any(MaintenanceRecord.class), anyLong()))
+                .thenThrow(new ValidationException("Invalid data", "description", null));
+
         String badJson = """
-            {"vehicleId":1,"description":"","date":"2026-03-01","cost":-10}
+            {
+              "description": "",
+              "serviceDate": "2026-03-01",
+              "alertsEnabled": true
+            }
         """;
 
-        when(maintenanceService.addMaintenance(any(MaintenanceRequestDTO.class)))
-                .thenThrow(new ValidationException("Description required or cost invalid", "description", null));
-
-        mockMvc.perform(post("/api/maintenance")
+        mockMvc.perform(post("/api/maintenance?vehicleId=1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(badJson))
+                .andDo(print())
                 .andExpect(status().isBadRequest());
     }
 }
