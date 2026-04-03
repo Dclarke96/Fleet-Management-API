@@ -1,9 +1,11 @@
 package com.dylanclarke.FleetManagementAPI.controller;
 
 import com.dylanclarke.FleetManagementAPI.config.SecurityConfig;
+import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
+import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
 import com.dylanclarke.FleetManagementAPI.exception.GlobalExceptionHandler;
 import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
-import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
+import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
 import com.dylanclarke.FleetManagementAPI.service.MaintenanceService;
 
 import org.junit.jupiter.api.Test;
@@ -27,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @WebMvcTest(MaintenanceController.class)
-@Import({SecurityConfig.class, com.dylanclarke.FleetManagementAPI.exception.GlobalExceptionHandler.class}) // ✅ FIX
+@Import({SecurityConfig.class, GlobalExceptionHandler.class})
 class MaintenanceControllerWebMvcTest {
 
     @Autowired
@@ -37,31 +39,32 @@ class MaintenanceControllerWebMvcTest {
     private MaintenanceService maintenanceService;
 
     @Test
-    @WithMockUser(roles = "ADMIN") 
+    @WithMockUser(roles = "ADMIN")
     void shouldCreateMaintenance() throws Exception {
 
-        MaintenanceRecord returned = new MaintenanceRecord();
+        MaintenanceResponseDTO returned = new MaintenanceResponseDTO();
         returned.setId(1L);
         returned.setDescription("Oil change");
-        returned.setServiceDate(LocalDate.parse("2026-03-01"));
-        returned.setAlertsEnabled(true);
+        returned.setDate(LocalDate.parse("2026-03-01"));
+        returned.setVehicleId(1L);
 
-        when(maintenanceService.addMaintenance(any(MaintenanceRecord.class), eq(1L)))
+        when(maintenanceService.addMaintenance(any(MaintenanceRequestDTO.class)))
                 .thenReturn(returned);
 
         String json = """
             {
+              "vehicleId": 1,
               "description": "Oil change",
-              "serviceDate": "2026-03-01",
-              "alertsEnabled": true
+              "date": "2026-03-01",
+              "cost": 50.0
             }
         """;
 
-        mockMvc.perform(post("/api/maintenance?vehicleId=1")
+        mockMvc.perform(post("/api/maintenance")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andDo(print())
-                .andExpect(status().isCreated()) // ✅ keep this
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.description").value("Oil change"));
     }
@@ -69,10 +72,11 @@ class MaintenanceControllerWebMvcTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldGetAllMaintenance() throws Exception {
-        MaintenanceRecord m1 = new MaintenanceRecord();
+
+        MaintenanceResponseDTO m1 = new MaintenanceResponseDTO();
         m1.setId(1L);
 
-        MaintenanceRecord m2 = new MaintenanceRecord();
+        MaintenanceResponseDTO m2 = new MaintenanceResponseDTO();
         m2.setId(2L);
 
         when(maintenanceService.getAllMaintenance()).thenReturn(List.of(m1, m2));
@@ -86,8 +90,9 @@ class MaintenanceControllerWebMvcTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldReturnNotFoundForMissingMaintenance() throws Exception {
+
         when(maintenanceService.getMaintenanceById(99L))
-                .thenThrow(new com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException("Maintenance", "id", 99L));
+                .thenThrow(new ResourceNotFoundException("Maintenance", "id", 99L));
 
         mockMvc.perform(get("/api/maintenance/99"))
                 .andExpect(status().isNotFound());
@@ -97,19 +102,20 @@ class MaintenanceControllerWebMvcTest {
     @WithMockUser(roles = "ADMIN")
     void shouldUpdateMaintenance() throws Exception {
 
-        MaintenanceRecord updated = new MaintenanceRecord();
+        MaintenanceResponseDTO updated = new MaintenanceResponseDTO();
         updated.setId(3L);
         updated.setDescription("Brake pads replaced");
-        updated.setServiceDate(LocalDate.parse("2026-03-10"));
+        updated.setDate(LocalDate.parse("2026-03-10"));
 
-        when(maintenanceService.updateMaintenance(eq(3L), any(MaintenanceRecord.class)))
+        when(maintenanceService.updateMaintenance(eq(3L), any(MaintenanceRequestDTO.class)))
                 .thenReturn(updated);
 
         String json = """
             {
+              "vehicleId": 1,
               "description": "Brake pads replaced",
-              "serviceDate": "2026-03-10",
-              "alertsEnabled": true
+              "date": "2026-03-10",
+              "cost": 120.0
             }
         """;
 
@@ -124,6 +130,7 @@ class MaintenanceControllerWebMvcTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldDeleteMaintenance() throws Exception {
+
         doNothing().when(maintenanceService).deleteMaintenance(4L);
 
         mockMvc.perform(delete("/api/maintenance/4"))
@@ -134,18 +141,19 @@ class MaintenanceControllerWebMvcTest {
     @WithMockUser(roles = "ADMIN")
     void shouldRejectInvalidMaintenanceCreate() throws Exception {
 
-        when(maintenanceService.addMaintenance(any(MaintenanceRecord.class), anyLong()))
+        when(maintenanceService.addMaintenance(any(MaintenanceRequestDTO.class)))
                 .thenThrow(new ValidationException("Invalid data", "description", null));
 
         String badJson = """
             {
+              "vehicleId": 1,
               "description": "",
-              "serviceDate": "2026-03-01",
-              "alertsEnabled": true
+              "date": "2026-03-01",
+              "cost": 50.0
             }
         """;
 
-        mockMvc.perform(post("/api/maintenance?vehicleId=1")
+        mockMvc.perform(post("/api/maintenance")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(badJson))
                 .andDo(print())

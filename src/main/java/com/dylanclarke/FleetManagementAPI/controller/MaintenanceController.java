@@ -4,18 +4,13 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
+import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
+import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
 import com.dylanclarke.FleetManagementAPI.service.MaintenanceService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/maintenance")
@@ -28,41 +23,37 @@ public class MaintenanceController {
     }
 
     @GetMapping
-    public List<MaintenanceRecord> getAllMaintenance() {
+    public List<MaintenanceResponseDTO> getAllMaintenance() {
         return maintenanceService.getAllMaintenance();
     }
 
-    @GetMapping("/vehicle/{vehicleId}")
-    public List<MaintenanceRecord> getForVehicle(@PathVariable Long vehicleId) {
-        return maintenanceService.getMaintenanceForVehicle(vehicleId);
-    }
-
     @GetMapping("/{id}")
-    public MaintenanceRecord getById(@PathVariable Long id) {
+    public MaintenanceResponseDTO getById(@PathVariable Long id) {
         return maintenanceService.getMaintenanceById(id);
     }
 
+    @GetMapping("/vehicle/{vehicleId}")
+    public List<MaintenanceResponseDTO> getByVehicle(@PathVariable Long vehicleId) {
+        return maintenanceService.getMaintenanceForVehicle(vehicleId);
+    }
 
     @PostMapping
-    public ResponseEntity<MaintenanceRecord> addMaintenance(
-            @RequestParam("vehicleId") Long vehicleId,
-            @RequestBody MaintenanceRecord record) {
+    public ResponseEntity<MaintenanceResponseDTO> createMaintenance(
+            @Valid @RequestBody MaintenanceRequestDTO requestDTO) {
 
-        MaintenanceRecord created = maintenanceService.addMaintenance(record, vehicleId);
+        MaintenanceResponseDTO response = maintenanceService.addMaintenance(requestDTO);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MaintenanceRecord> updateMaintenance(
+    public ResponseEntity<MaintenanceResponseDTO> updateMaintenance(
             @PathVariable Long id,
-            @RequestBody MaintenanceRecord record) {
+            @Valid @RequestBody MaintenanceRequestDTO requestDTO) {
 
-        MaintenanceRecord updated = maintenanceService.updateMaintenance(id, record);
+        MaintenanceResponseDTO response = maintenanceService.updateMaintenance(id, requestDTO);
 
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
