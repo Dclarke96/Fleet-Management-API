@@ -1,9 +1,9 @@
 package com.dylanclarke.FleetManagementAPI.service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO;
@@ -24,31 +24,29 @@ public class VehicleService {
     }
 
     // ----------------------------------------
-    // GET ALL
+    // GET ALL (PAGINATED)
     // ----------------------------------------
-    public List<VehicleResponseDTO> getAllVehicles() {
-        return repository.findAll()
-                .stream()
-                .map(this::toDto)
-                .toList();
+    public Page<VehicleResponseDTO> getAllVehicles(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(this::toDto);
     }
 
     // ----------------------------------------
     // GET BY ID
     // ----------------------------------------
-    public Optional<VehicleResponseDTO> getVehicleById(Long id) {
-        return repository.findById(id)
-                .map(this::toDto);
+    public VehicleResponseDTO getVehicleById(Long id) {
+        Vehicle vehicle = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", id));
+
+        return toDto(vehicle);
     }
 
     // ----------------------------------------
-    // SEARCH
+    // SEARCH (PAGINATED)
     // ----------------------------------------
-    public List<VehicleResponseDTO> searchVehicles(String query) {
-        return repository.searchVehicles(query)
-                .stream()
-                .map(this::toDto)
-                .toList();
+    public Page<VehicleResponseDTO> searchVehicles(String query, Pageable pageable) {
+        return repository.searchVehicles(query, pageable)
+                .map(this::toDto);
     }
 
     // ----------------------------------------
@@ -172,7 +170,10 @@ public class VehicleService {
 
         if (vehicle.getVehicleYear() < 1900 || vehicle.getVehicleYear() > currentYear) {
             throw new ValidationException(
-                    "Year must be between 1900 and " + currentYear, "vehicleYear", vehicle.getVehicleYear());
+                    "Year must be between 1900 and " + currentYear,
+                    "vehicleYear",
+                    vehicle.getVehicleYear()
+            );
         }
 
         LocalDate start = vehicle.getStartDate();

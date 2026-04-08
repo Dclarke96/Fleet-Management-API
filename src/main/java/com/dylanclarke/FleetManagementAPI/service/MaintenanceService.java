@@ -1,9 +1,9 @@
 package com.dylanclarke.FleetManagementAPI.service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
@@ -30,21 +30,18 @@ public class MaintenanceService {
 
     // ------------------ READ ------------------
 
-    public List<MaintenanceResponseDTO> getAllMaintenance() {
-        return maintenanceRepository.findAll()
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+    public Page<MaintenanceResponseDTO> getAllMaintenance(Pageable pageable) {
+        return maintenanceRepository.findAll(pageable)
+                .map(this::mapToDTO);
     }
 
-    public List<MaintenanceResponseDTO> getMaintenanceForVehicle(Long vehicleId) {
+    public Page<MaintenanceResponseDTO> getMaintenanceForVehicle(Long vehicleId, Pageable pageable) {
+
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
 
-        return maintenanceRepository.findByVehicleOrderByServiceDateAsc(vehicle)
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        return maintenanceRepository.findByVehicle(vehicle, pageable)
+                .map(this::mapToDTO);
     }
 
     public MaintenanceResponseDTO getMaintenanceById(Long id) {
@@ -125,7 +122,6 @@ public class MaintenanceService {
 
     private void validateRecord(MaintenanceRecord record, Vehicle vehicle) {
 
-        // ✅ Description validation
         if (record.getDescription() == null || record.getDescription().trim().length() < 3) {
             throw new ValidationException(
                     "Description must be at least 3 characters",
@@ -136,7 +132,6 @@ public class MaintenanceService {
 
         LocalDate serviceDate = record.getServiceDate();
 
-        // ✅ CRITICAL FIX: Null check BEFORE using isBefore()
         if (serviceDate == null) {
             throw new ValidationException(
                     "Service date cannot be null",
@@ -145,7 +140,6 @@ public class MaintenanceService {
             );
         }
 
-        // Business rule validations
         if (serviceDate.isBefore(LocalDate.now())) {
             throw new ValidationException(
                     "Service date cannot be in the past",

@@ -13,6 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,7 +48,7 @@ class MaintenanceControllerWebMvcTest {
         MaintenanceResponseDTO returned = new MaintenanceResponseDTO();
         returned.setId(1L);
         returned.setDescription("Oil change");
-        returned.setDate(LocalDate.parse("2026-03-01"));
+        returned.setDate(LocalDate.parse("2026-05-01"));
         returned.setVehicleId(1L);
 
         when(maintenanceService.addMaintenance(any(MaintenanceRequestDTO.class)))
@@ -55,7 +58,7 @@ class MaintenanceControllerWebMvcTest {
             {
               "vehicleId": 1,
               "description": "Oil change",
-              "date": "2026-03-01",
+              "date": "2026-05-01",
               "cost": 50.0
             }
         """;
@@ -79,12 +82,18 @@ class MaintenanceControllerWebMvcTest {
         MaintenanceResponseDTO m2 = new MaintenanceResponseDTO();
         m2.setId(2L);
 
-        when(maintenanceService.getAllMaintenance()).thenReturn(List.of(m1, m2));
+        Page<MaintenanceResponseDTO> page =
+                new PageImpl<>(List.of(m1, m2));
 
-        mockMvc.perform(get("/api/maintenance"))
+        when(maintenanceService.getAllMaintenance(any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/api/maintenance")
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(1));
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].id").value(1));
     }
 
     @Test
@@ -105,7 +114,7 @@ class MaintenanceControllerWebMvcTest {
         MaintenanceResponseDTO updated = new MaintenanceResponseDTO();
         updated.setId(3L);
         updated.setDescription("Brake pads replaced");
-        updated.setDate(LocalDate.parse("2026-03-10"));
+        updated.setDate(LocalDate.parse("2026-05-10"));
 
         when(maintenanceService.updateMaintenance(eq(3L), any(MaintenanceRequestDTO.class)))
                 .thenReturn(updated);
@@ -114,7 +123,7 @@ class MaintenanceControllerWebMvcTest {
             {
               "vehicleId": 1,
               "description": "Brake pads replaced",
-              "date": "2026-03-10",
+              "date": "2026-05-10",
               "cost": 120.0
             }
         """;

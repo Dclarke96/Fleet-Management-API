@@ -16,6 +16,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
@@ -38,13 +41,15 @@ class MaintenanceServiceTest {
         service = new MaintenanceService(maintenanceRepository, vehicleRepository);
     }
 
+    // ---------------- CREATE ----------------
+
     @Test
     void shouldSaveMaintenance() {
 
         Vehicle vehicle = new Vehicle();
         vehicle.setId(1L);
-        vehicle.setStartDate(LocalDate.now()); // ✅ REQUIRED
-        vehicle.setEndDate(LocalDate.now().plusDays(10)); // optional but safe
+        vehicle.setStartDate(LocalDate.now());
+        vehicle.setEndDate(LocalDate.now().plusDays(10));
 
         MaintenanceRequestDTO request = new MaintenanceRequestDTO();
         request.setVehicleId(1L);
@@ -52,17 +57,11 @@ class MaintenanceServiceTest {
         request.setDate(LocalDate.now().plusDays(1));
         request.setCost(50.0);
 
-        MaintenanceResponseDTO saved = new MaintenanceResponseDTO();
-        saved.setId(1L);
-        saved.setVehicleId(1L);
-        saved.setDescription("Oil change");
-        saved.setDate(request.getDate());
-
         when(vehicleRepository.findById(1L)).thenReturn(Optional.of(vehicle));
 
         when(maintenanceRepository.save(any())).thenAnswer(invocation -> {
             MaintenanceRecord entity = invocation.getArgument(0);
-            entity.setId(1L); // simulate DB assigning ID
+            entity.setId(1L);
             return entity;
         });
 
@@ -72,24 +71,37 @@ class MaintenanceServiceTest {
         assertEquals(1L, result.getVehicleId());
     }
 
+    // ---------------- GET ALL (FIXED FOR PAGE) ----------------
+
     @Test
     void shouldGetAllMaintenance() {
 
-        MaintenanceResponseDTO r1 = new MaintenanceResponseDTO();
+        Vehicle vehicle = new Vehicle();
+        vehicle.setId(1L);
+
+        MaintenanceRecord r1 = new MaintenanceRecord();
         r1.setId(1L);
+        r1.setVehicle(vehicle);
 
-        MaintenanceResponseDTO r2 = new MaintenanceResponseDTO();
+        MaintenanceRecord r2 = new MaintenanceRecord();
         r2.setId(2L);
+        r2.setVehicle(vehicle);
 
-        // If your service maps entities -> DTOs internally,
-        // this assumes repository returns entities which service maps
-        when(maintenanceRepository.findAll()).thenReturn(List.of());
+        Page<MaintenanceRecord> page =
+                new PageImpl<>(List.of(r1, r2));
 
-        List<MaintenanceResponseDTO> results = service.getAllMaintenance();
+        when(maintenanceRepository.findAll(any(Pageable.class)))
+                .thenReturn(page);
 
-        // Depending on your mapping logic, adjust expected size
+        Page<MaintenanceResponseDTO> results =
+                service.getAllMaintenance(Pageable.unpaged());
+
         assertNotNull(results);
+        assertEquals(2, results.getContent().size());
+        assertEquals(1L, results.getContent().get(0).getId());
     }
+
+    // ---------------- DELETE ----------------
 
     @Test
     void shouldDeleteMaintenance() {
@@ -100,6 +112,8 @@ class MaintenanceServiceTest {
 
         verify(maintenanceRepository, times(1)).deleteById(1L);
     }
+
+    // ---------------- GET BY ID ----------------
 
     @Test
     void shouldThrowOnMissingMaintenance() {

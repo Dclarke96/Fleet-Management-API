@@ -1,10 +1,17 @@
 package com.dylanclarke.FleetManagementAPI.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
@@ -23,8 +30,8 @@ public class MaintenanceController {
     }
 
     @GetMapping
-    public List<MaintenanceResponseDTO> getAllMaintenance() {
-        return maintenanceService.getAllMaintenance();
+    public Page<MaintenanceResponseDTO> getAllMaintenance(Pageable pageable) {
+        return maintenanceService.getAllMaintenance(pageable);
     }
 
     @GetMapping("/{id}")
@@ -33,8 +40,8 @@ public class MaintenanceController {
     }
 
     @GetMapping("/vehicle/{vehicleId}")
-    public List<MaintenanceResponseDTO> getByVehicle(@PathVariable Long vehicleId) {
-        return maintenanceService.getMaintenanceForVehicle(vehicleId);
+    public Page<MaintenanceResponseDTO> getByVehicle(@PathVariable Long vehicleId, Pageable pageable) {
+        return maintenanceService.getMaintenanceForVehicle(vehicleId, pageable);
     }
 
     @PostMapping
