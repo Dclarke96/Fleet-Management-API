@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dylanclarke.FleetManagementAPI.api.ApiResponse;
+import com.dylanclarke.FleetManagementAPI.api.PageResponse;
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
 import com.dylanclarke.FleetManagementAPI.service.MaintenanceService;
@@ -30,13 +32,24 @@ public class MaintenanceController {
     }
 
     @GetMapping
-    public Page<MaintenanceResponseDTO> getAllMaintenance(Pageable pageable) {
-        return maintenanceService.getAllMaintenance(pageable);
+    public ResponseEntity<ApiResponse<PageResponse<MaintenanceResponseDTO>>> getAllMaintenance(Pageable pageable) {
+
+        Page<MaintenanceResponseDTO> page = maintenanceService.getAllMaintenance(pageable);
+        PageResponse<MaintenanceResponseDTO> pageResponse = new PageResponse<>(page);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, pageResponse, "Maintenance retrieved successfully")
+        );
     }
 
     @GetMapping("/{id}")
-    public MaintenanceResponseDTO getById(@PathVariable Long id) {
-        return maintenanceService.getMaintenanceById(id);
+    public ResponseEntity<ApiResponse<MaintenanceResponseDTO>> getById(@PathVariable Long id) {
+
+        MaintenanceResponseDTO response = maintenanceService.getMaintenanceById(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, response, "Maintenance retrieved successfully")
+        );
     }
 
     @GetMapping("/vehicle/{vehicleId}")
@@ -45,22 +58,25 @@ public class MaintenanceController {
     }
 
     @PostMapping
-    public ResponseEntity<MaintenanceResponseDTO> createMaintenance(
+    public ResponseEntity<ApiResponse<MaintenanceResponseDTO>> createMaintenance(
             @Valid @RequestBody MaintenanceRequestDTO requestDTO) {
 
         MaintenanceResponseDTO response = maintenanceService.addMaintenance(requestDTO);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, response, "Maintenance created successfully"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MaintenanceResponseDTO> updateMaintenance(
+    public ResponseEntity<ApiResponse<MaintenanceResponseDTO>> updateMaintenance(
             @PathVariable Long id,
             @Valid @RequestBody MaintenanceRequestDTO requestDTO) {
 
         MaintenanceResponseDTO response = maintenanceService.updateMaintenance(id, requestDTO);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, response, "Maintenance updated successfully")
+        );
     }
 
     @DeleteMapping("/{id}")

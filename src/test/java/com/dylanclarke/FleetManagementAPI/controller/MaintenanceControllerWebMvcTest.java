@@ -68,8 +68,8 @@ class MaintenanceControllerWebMvcTest {
                         .content(json))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.description").value("Oil change"));
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.description").value("Oil change"));
     }
 
     @Test
@@ -92,8 +92,8 @@ class MaintenanceControllerWebMvcTest {
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)))
-                .andExpect(jsonPath("$.content[0].id").value(1));
+                .andExpect(jsonPath("$.data.content", hasSize(2)))
+                .andExpect(jsonPath("$.data.content[0].id").value(1));
     }
 
     @Test
@@ -132,8 +132,8 @@ class MaintenanceControllerWebMvcTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(3))
-                .andExpect(jsonPath("$.description").value("Brake pads replaced"));
+                .andExpect(jsonPath("$.data.id").value(3))
+                .andExpect(jsonPath("$.data.description").value("Brake pads replaced"));
     }
 
     @Test

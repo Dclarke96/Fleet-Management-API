@@ -88,8 +88,8 @@ class VehicleControllerWebMvcTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(vehicleJson))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.title").value("Test Vehicle"));
+                .andExpect(jsonPath("$.data.id").exists())
+                .andExpect(jsonPath("$.data.title").value("Test Vehicle"));
     }
 
     // ---------------- GET ALL (PAGINATION FIX) ----------------
@@ -113,8 +113,8 @@ class VehicleControllerWebMvcTest {
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)))
-                .andExpect(jsonPath("$.content[0].id").value(1));
+                .andExpect(jsonPath("$.data.content", hasSize(2)))
+                .andExpect(jsonPath("$.data.content[0].id").value(1));
     }
 
     // ---------------- GET BY ID ----------------
@@ -160,7 +160,7 @@ class VehicleControllerWebMvcTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(3));
+                .andExpect(jsonPath("$.data.id").value(3));
     }
 
     // ---------------- DELETE ----------------
@@ -222,7 +222,7 @@ class VehicleControllerWebMvcTest {
                         .param("page","0")
                         .param("size","10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].id").value(10));
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].id").value(10));
     }
 }
