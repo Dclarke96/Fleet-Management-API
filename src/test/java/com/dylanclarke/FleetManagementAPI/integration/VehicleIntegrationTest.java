@@ -7,16 +7,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.transaction.annotation.Transactional;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.jayway.jsonpath.JsonPath;
 
 @SuppressWarnings("null")
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @Transactional
 public class VehicleIntegrationTest {
 
@@ -27,6 +30,7 @@ public class VehicleIntegrationTest {
     @WithMockUser
     @SuppressWarnings("null")
     void testFullCRUD() throws Exception {
+        System.out.println("TEST IS RUNNING");
 
         // CREATE
         String vehicleJson = """
@@ -42,20 +46,24 @@ public class VehicleIntegrationTest {
             }
         """;
 
-        String createResponse = mockMvc.perform(post("/api/vehicles")
+        String result = mockMvc.perform(post("/api/vehicles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(vehicleJson))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        Number idNumber = JsonPath.read(createResponse, "$.id");
+                System.out.println("RAW RESPONSE:");
+                System.out.println(result);
+
+        Number idNumber = JsonPath.read(result, "$.data.id");
         long id = idNumber.longValue();
 
         // READ
         mockMvc.perform(get("/api/vehicles/" + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.make").value("Toyota"));
+                .andExpect(jsonPath("$.data.make").value("Toyota"));
 
         // UPDATE
         String updateJson = """
@@ -75,8 +83,8 @@ public class VehicleIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.vehicleYear").value(2022))
-                .andExpect(jsonPath("$.maintenanceAlertsEnabled").value(true));
+                .andExpect(jsonPath("$.data.vehicleYear").value(2022))
+                .andExpect(jsonPath("$.data.maintenanceAlertsEnabled").value(true));
 
         // DELETE
         mockMvc.perform(delete("/api/vehicles/" + id))

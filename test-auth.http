@@ -1,0 +1,8 @@
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "persistentUser",
+  "password": "1234",
+  "companyName": "Persistent Co"
+}

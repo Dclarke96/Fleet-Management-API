@@ -4,6 +4,7 @@ import com.dylanclarke.FleetManagementAPI.config.SecurityConfig;
 import com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO;
 import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
+import com.dylanclarke.FleetManagementAPI.exception.GlobalExceptionHandler;
 import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
 import com.dylanclarke.FleetManagementAPI.service.VehicleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(VehicleController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, GlobalExceptionHandler.class})
 @SuppressWarnings({"null","unused"})
 class VehicleControllerWebMvcTest {
 
