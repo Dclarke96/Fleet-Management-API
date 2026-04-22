@@ -28,6 +28,11 @@ dependencies {
 
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
 
+    // --- JWT Authentication ---
+    implementation ("io.jsonwebtoken:jjwt-api:0.12.5")
+    runtimeOnly ("io.jsonwebtoken:jjwt-impl:0.12.5")
+    runtimeOnly ("io.jsonwebtoken:jjwt-jackson:0.12.5")
+
     // --- Database Drivers ---
     runtimeOnly("com.h2database:h2")              // In-memory dev/test DB
     runtimeOnly("com.mysql:mysql-connector-j")   // Production DB option
