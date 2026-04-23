@@ -2,10 +2,14 @@ package com.dylanclarke.FleetManagementAPI.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.dylanclarke.FleetManagementAPI.dto.RegisterRequest;
+import com.dylanclarke.FleetManagementAPI.api.ApiResponse;
 import com.dylanclarke.FleetManagementAPI.dto.AuthRequest;
+import com.dylanclarke.FleetManagementAPI.dto.RegisterRequest;
 import com.dylanclarke.FleetManagementAPI.model.Company;
 import com.dylanclarke.FleetManagementAPI.model.Role;
 import com.dylanclarke.FleetManagementAPI.model.User;
@@ -34,36 +38,44 @@ public class AuthController {
 
     // ---------------- REGISTER ----------------
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<String>> register(@RequestBody RegisterRequest request) {
 
-        Company company = new Company();
-        company.setName(request.getCompanyName());
-        companyRepository.save(company);
+        try {
+            Company company = new Company();
+            company.setName(request.getCompanyName());
+            companyRepository.save(company);
 
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.ADMIN);
-        user.setCompany(company);
+            User user = new User();
+            user.setUsername(request.getUsername());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setRole(Role.ADMIN);
+            user.setCompany(company);
 
-        userRepository.save(user);
+            userRepository.save(user);
 
-        return ResponseEntity.ok("User and company registered");
+            return ResponseEntity.ok(new ApiResponse<>(true, "User registered successfully", "Registration successful"));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(new ApiResponse<>(false, null, "Registration failed: " + e.getMessage()));
+        }
     }
 
     // ---------------- LOGIN ----------------
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<ApiResponse<String>> login(@RequestBody AuthRequest request) {
 
-        User user = userRepository.findByUsername(request.username)
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        try {
+            User user = userRepository.findByUsername(request.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
-        if (!passwordEncoder.matches(request.password, user.getPassword())) {
-            return ResponseEntity.status(401).body("Invalid credentials");
+            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                return ResponseEntity.status(401).body(new ApiResponse<>(false, null, "Invalid credentials"));
+            }
+
+            String token = jwtService.generateToken(user.getUsername());
+
+            return ResponseEntity.ok(new ApiResponse<>(true, token, "Login successful"));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(new ApiResponse<>(false, null, "Login failed: " + e.getMessage()));
         }
-
-        String token = jwtService.generateToken(user.getUsername());
-
-        return ResponseEntity.ok(token);
     }
 }

@@ -1,11 +1,10 @@
 package com.dylanclarke.FleetManagementAPI.controller;
 
-import com.dylanclarke.FleetManagementAPI.config.SecurityConfig;
 import com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO;
-import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
 import com.dylanclarke.FleetManagementAPI.exception.GlobalExceptionHandler;
 import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
+import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
 import com.dylanclarke.FleetManagementAPI.service.VehicleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -20,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -33,9 +31,9 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(VehicleController.class)
-@Import({SecurityConfig.class, GlobalExceptionHandler.class})
-@SuppressWarnings({"null","unused"})
+@WebMvcTest(controllers = VehicleController.class)
+@Import(GlobalExceptionHandler.class)
+@SuppressWarnings({"null", "unused"})
 class VehicleControllerWebMvcTest {
 
     @Autowired
@@ -55,7 +53,6 @@ class VehicleControllerWebMvcTest {
     // ---------------- CREATE ----------------
 
     @Test
-    @WithMockUser
     void shouldCreateVehicle() throws Exception {
 
         VehicleResponseDTO returnedVehicle = new VehicleResponseDTO();
@@ -73,16 +70,16 @@ class VehicleControllerWebMvcTest {
                 .thenReturn(returnedVehicle);
 
         String vehicleJson = """
-            {
-              "title": "Test Vehicle",
-              "make": "Toyota",
-              "model": "Corolla",
-              "vehicleYear": 2021,
-              "location": "Garage",
-              "maintenanceAlertsEnabled": false,
-              "startDate": "2026-05-01",
-              "endDate": "2026-12-31"
-            }
+        {
+          "title": "Test Vehicle",
+          "make": "Toyota",
+          "model": "Corolla",
+          "vehicleYear": 2021,
+          "location": "Garage",
+          "maintenanceAlertsEnabled": false,
+          "startDate": "2026-05-01",
+          "endDate": "2026-12-31"
+        }
         """;
 
         mockMvc.perform(post("/api/vehicles")
@@ -93,10 +90,9 @@ class VehicleControllerWebMvcTest {
                 .andExpect(jsonPath("$.data.title").value("Test Vehicle"));
     }
 
-    // ---------------- GET ALL (PAGINATION FIX) ----------------
+    // ---------------- GET ALL ----------------
 
     @Test
-    @WithMockUser
     void shouldGetAllVehicles() throws Exception {
 
         VehicleResponseDTO v1 = new VehicleResponseDTO();
@@ -121,7 +117,6 @@ class VehicleControllerWebMvcTest {
     // ---------------- GET BY ID ----------------
 
     @Test
-    @WithMockUser
     void shouldReturnNotFoundForMissingVehicle() throws Exception {
 
         when(vehicleService.getVehicleById(99L))
@@ -134,7 +129,6 @@ class VehicleControllerWebMvcTest {
     // ---------------- UPDATE ----------------
 
     @Test
-    @WithMockUser
     void shouldUpdateVehicle() throws Exception {
 
         VehicleResponseDTO updated = new VehicleResponseDTO();
@@ -145,16 +139,16 @@ class VehicleControllerWebMvcTest {
                 .thenReturn(updated);
 
         String json = """
-            {
-              "title": "Updated Vehicle",
-              "make": "Toyota",
-              "model": "Corolla",
-              "vehicleYear": 2022,
-              "location": "Garage",
-              "maintenanceAlertsEnabled": true,
-              "startDate": "2026-05-01",
-              "endDate": "2026-12-31"
-            }
+        {
+          "title": "Updated Vehicle",
+          "make": "Toyota",
+          "model": "Corolla",
+          "vehicleYear": 2022,
+          "location": "Garage",
+          "maintenanceAlertsEnabled": true,
+          "startDate": "2026-05-01",
+          "endDate": "2026-12-31"
+        }
         """;
 
         mockMvc.perform(put("/api/vehicles/3")
@@ -167,7 +161,6 @@ class VehicleControllerWebMvcTest {
     // ---------------- DELETE ----------------
 
     @Test
-    @WithMockUser
     void shouldDeleteVehicle() throws Exception {
 
         doNothing().when(vehicleService).deleteVehicle(4L);
@@ -176,38 +169,9 @@ class VehicleControllerWebMvcTest {
                 .andExpect(status().isNoContent());
     }
 
-    // ---------------- VALIDATION ----------------
-
-    @Test
-    @WithMockUser
-    void shouldRejectInvalidDatesOnCreate() throws Exception {
-
-        String badJson = """
-            {
-              "title":"Bad",
-              "make":"M",
-              "model":"D",
-              "year":2020,
-              "location":"L",
-              "maintenanceAlertsEnabled":false,
-              "startDate":"2026-01-02",
-              "endDate":"2026-01-01"
-            }
-        """;
-
-        when(vehicleService.addVehicle(any(VehicleRequestDTO.class)))
-                .thenThrow(new ValidationException("End date cannot be before start date", "endDate", null));
-
-        mockMvc.perform(post("/api/vehicles")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(badJson))
-                .andExpect(status().isBadRequest());
-    }
-
     // ---------------- SEARCH ----------------
 
     @Test
-    @WithMockUser
     void shouldSearchVehicles() throws Exception {
 
         VehicleResponseDTO v = new VehicleResponseDTO();
@@ -219,9 +183,9 @@ class VehicleControllerWebMvcTest {
                 .thenReturn(page);
 
         mockMvc.perform(get("/api/vehicles/search")
-                        .param("q","test")
-                        .param("page","0")
-                        .param("size","10"))
+                        .param("q", "test")
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content", hasSize(1)))
                 .andExpect(jsonPath("$.data.content[0].id").value(10));

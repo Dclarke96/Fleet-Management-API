@@ -4,10 +4,12 @@
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.1.3-brightgreen)
 
 ## Overview
-Fleet Management API is a backend RESTful service for managing vehicles and maintenance records.  
-It provides CRUD operations, search functionality, and input validation, supporting the creation of a scalable fleet management system.
+Fleet Management API is a backend service designed to help businesses track vehicles, manage maintenance records, and maintain operational visibility across their fleet.
 
-This project was developed as part of a professional portfolio to demonstrate software engineering skills including backend API design, layered architecture, and documentation practices.
+It provides secure, scalable RESTful endpoints for managing fleet data, enabling real-time updates and structured record keeping.  
+It also provides CRUD operations, search functionality, and input validation, supporting the creation of a scalable fleet management system.
+
+Designed to demonstrate backend system design and real-world application architecture
 
 ---
 
