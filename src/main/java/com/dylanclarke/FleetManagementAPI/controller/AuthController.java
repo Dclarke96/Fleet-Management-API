@@ -17,6 +17,8 @@ import com.dylanclarke.FleetManagementAPI.repository.CompanyRepository;
 import com.dylanclarke.FleetManagementAPI.repository.UserRepository;
 import com.dylanclarke.FleetManagementAPI.util.JwtService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -26,10 +28,12 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public AuthController(UserRepository userRepository,
-                          CompanyRepository companyRepository,
-                          PasswordEncoder passwordEncoder,
-                          JwtService jwtService) {
+    public AuthController(
+            UserRepository userRepository,
+            CompanyRepository companyRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService) {
+
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.passwordEncoder = passwordEncoder;
@@ -38,44 +42,43 @@ public class AuthController {
 
     // ---------------- REGISTER ----------------
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<String>> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<String>> register(
+            @Valid @RequestBody RegisterRequest request) {
 
-        try {
-            Company company = new Company();
-            company.setName(request.getCompanyName());
-            companyRepository.save(company);
+        Company company = new Company();
+        company.setName(request.getCompanyName());
+        companyRepository.save(company);
 
-            User user = new User();
-            user.setUsername(request.getUsername());
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-            user.setRole(Role.ADMIN);
-            user.setCompany(company);
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.ADMIN);
+        user.setCompany(company);
 
-            userRepository.save(user);
+        userRepository.save(user);
 
-            return ResponseEntity.ok(new ApiResponse<>(true, "User registered successfully", "Registration successful"));
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(new ApiResponse<>(false, null, "Registration failed: " + e.getMessage()));
-        }
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Registration successful", "User registered successfully")
+        );
     }
 
     // ---------------- LOGIN ----------------
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<ApiResponse<String>> login(
+            @Valid @RequestBody AuthRequest request) {
 
-        try {
-            User user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
-            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                return ResponseEntity.status(401).body(new ApiResponse<>(false, null, "Invalid credentials"));
-            }
-
-            String token = jwtService.generateToken(user.getUsername());
-
-            return ResponseEntity.ok(new ApiResponse<>(true, token, "Login successful"));
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(new ApiResponse<>(false, null, "Login failed: " + e.getMessage()));
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            return ResponseEntity.status(401)
+                    .body(new ApiResponse<>(false, null, "Invalid credentials"));
         }
+
+        String token = jwtService.generateToken(user.getUsername());
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, token, "Login successful")
+        );
     }
 }

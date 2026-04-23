@@ -1,8 +1,100 @@
-POST http://localhost:8080/api/auth/register
+@baseUrl = http://localhost:8080/api
+@username = persistentUser
+@password = 1234
+
+# =====================================================
+# 🔐 AUTH - REGISTER (Persistent User for Login Flow)
+# =====================================================
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "username": "persistentUser",
-  "password": "1234",
+  "username": "{{username}}",
+  "password": "{{password}}",
   "companyName": "Persistent Co"
 }
+
+###
+
+# =====================================================
+# 🔐 AUTH - LOGIN (Capture Token)
+# =====================================================
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {%
+    console.log("LOGIN RESPONSE BODY:", response.body);
+    console.log("TOKEN BEING SAVED:", response.body.data);
+
+    // Your ApiResponse returns: { status, data, message }
+    client.global.set("authToken", response.body.data);
+%}
+
+###
+
+# =====================================================
+# 🔒 AUTH - ACCESS PROTECTED ROUTE (VALID TOKEN)
+# =====================================================
+GET {{baseUrl}}/vehicles
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlciIsImlhdCI6MTc3Njk4MTQ0NywiZXhwIjoxNzc2OTg1MDQ3fQ.rhREcTTGNWOx2FPuvuYImdDsgUm8l_IpR4uJkX-8OeLBJnCNP7fJNJcxexwCfwSj
+
+###
+
+# =====================================================
+# ❌ AUTH - LOGIN (Wrong Password)
+# =====================================================
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "wrongPassword"
+}
+
+###
+
+# =====================================================
+# ❌ AUTH - REGISTER (Invalid Input Validation Test)
+# =====================================================
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "",
+  "password": "",
+  "companyName": ""
+}
+
+###
+
+# =====================================================
+# 🧪 AUTH - REGISTER (Unique User Test)
+# =====================================================
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "user_{{$timestamp}}",
+  "password": "{{password}}",
+  "companyName": "Test Company"
+}
+
+###
+
+# =====================================================
+# ❌ AUTH - ACCESS PROTECTED ROUTE (NO TOKEN)
+# =====================================================
+GET {{baseUrl}}/vehicles
+
+###
+
+# =====================================================
+# ❌ AUTH - ACCESS PROTECTED ROUTE (INVALID TOKEN)
+# =====================================================
+GET {{baseUrl}}/vehicles
+Authorization: Bearer invalidToken123
