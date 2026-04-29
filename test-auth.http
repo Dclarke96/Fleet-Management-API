@@ -31,7 +31,7 @@ Content-Type: application/json
     console.log("LOGIN RESPONSE BODY:", response.body);
     console.log("TOKEN BEING SAVED:", response.body.data);
 
-    // Your ApiResponse returns: { status, data, message }
+    // Store JWT token for reuse
     client.global.set("authToken", response.body.data);
 %}
 
@@ -41,7 +41,7 @@ Content-Type: application/json
 # 🔒 AUTH - ACCESS PROTECTED ROUTE (VALID TOKEN)
 # =====================================================
 GET {{baseUrl}}/vehicles
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjQyODksImV4cCI6MTc3NzQyNzg4OX0.6GK9Zx8-vvdUUU11GuC7Y1ismQT9Dmze_iSC0ySVz0vqeOLS4J6ipUcyqfYPStHc
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
 
 ###
 
@@ -98,3 +98,83 @@ GET {{baseUrl}}/vehicles
 # =====================================================
 GET {{baseUrl}}/vehicles
 Authorization: Bearer invalidToken123
+
+###
+
+# =====================================================
+# 🚗 VEHICLE - CREATE (Authenticated)
+# =====================================================
+POST {{baseUrl}}/vehicles
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+Content-Type: application/json
+
+{
+  "title": "Manual Test Vehicle",
+  "make": "Toyota",
+  "model": "Corolla",
+  "vehicleYear": 2022,
+  "location": "Test Garage",
+  "maintenanceAlertsEnabled": true,
+  "startDate": "2026-05-01",
+  "endDate": "2026-12-31"
+}
+
+> {%
+    console.log("CREATED VEHICLE:", response.body);
+    client.global.set("vehicleId", response.body.data.id);
+%}
+
+
+###
+
+# =====================================================
+# 🚗 VEHICLE - GET BY ID
+# =====================================================
+GET {{baseUrl}}/vehicles/2
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+
+###
+
+# =====================================================
+# 🚗 VEHICLE - UPDATE
+# =====================================================
+PUT {{baseUrl}}/vehicles/2
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+Content-Type: application/json
+
+{
+  "title": "Updated Manual Vehicle",
+  "make": "Toyota",
+  "model": "Camry",
+  "vehicleYear": 2023,
+  "location": "Updated Garage",
+  "maintenanceAlertsEnabled": false,
+  "startDate": "2026-05-01",
+  "endDate": "2026-12-31"
+}
+
+###
+
+# =====================================================
+# 🚗 VEHICLE - SEARCH
+# =====================================================
+GET {{baseUrl}}/vehicles/search?q=Manual&page=0&size=10
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+
+###
+
+# =====================================================
+# 🚗 VEHICLE - DELETE
+# =====================================================
+DELETE {{baseUrl}}/vehicles/2
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+
+###
+
+# =====================================================
+# 🚗 VEHICLE - VERIFY DELETE (SHOULD FAIL OR 404)
+# =====================================================
+GET {{baseUrl}}/vehicles/2
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+
+###
