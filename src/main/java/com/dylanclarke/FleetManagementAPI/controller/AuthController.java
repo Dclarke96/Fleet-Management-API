@@ -45,6 +45,11 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> register(
             @Valid @RequestBody RegisterRequest request) {
 
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+                return ResponseEntity.status(409)
+                        .body(new ApiResponse<>(false, null, "Username already exists"));
+        }
+
         Company company = new Company();
         company.setName(request.getCompanyName());
         companyRepository.save(company);

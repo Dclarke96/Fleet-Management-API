@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8080/api
-@username = persistentUser
+@username = persistentUser2
 @password = 1234
 
 # =====================================================
@@ -41,7 +41,7 @@ Content-Type: application/json
 # 🔒 AUTH - ACCESS PROTECTED ROUTE (VALID TOKEN)
 # =====================================================
 GET {{baseUrl}}/vehicles
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlciIsImlhdCI6MTc3Njk4MTQ0NywiZXhwIjoxNzc2OTg1MDQ3fQ.rhREcTTGNWOx2FPuvuYImdDsgUm8l_IpR4uJkX-8OeLBJnCNP7fJNJcxexwCfwSj
+Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjQyODksImV4cCI6MTc3NzQyNzg4OX0.6GK9Zx8-vvdUUU11GuC7Y1ismQT9Dmze_iSC0ySVz0vqeOLS4J6ipUcyqfYPStHc
 
 ###
 
