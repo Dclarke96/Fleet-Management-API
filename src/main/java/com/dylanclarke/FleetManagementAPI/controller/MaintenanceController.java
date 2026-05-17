@@ -53,8 +53,24 @@ public class MaintenanceController {
     }
 
     @GetMapping("/vehicle/{vehicleId}")
-    public Page<MaintenanceResponseDTO> getByVehicle(@PathVariable Long vehicleId, Pageable pageable) {
-        return maintenanceService.getMaintenanceForVehicle(vehicleId, pageable);
+    public ResponseEntity<ApiResponse<PageResponse<MaintenanceResponseDTO>>> getByVehicle(
+            @PathVariable Long vehicleId,
+            Pageable pageable
+    ) {
+
+        Page<MaintenanceResponseDTO> page =
+                maintenanceService.getMaintenanceForVehicle(vehicleId, pageable);
+
+        PageResponse<MaintenanceResponseDTO> pageResponse =
+                new PageResponse<>(page);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        pageResponse,
+                        "Maintenance retrieved successfully"
+                )
+        );
     }
 
     @PostMapping

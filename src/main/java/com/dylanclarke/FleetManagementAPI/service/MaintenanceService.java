@@ -81,6 +81,7 @@ public class MaintenanceService {
 
         existing.setDescription(request.getDescription());
         existing.setServiceDate(request.getDate());
+        existing.setCost(request.getCost()); // 🔥 ADDED FIX HERE
         existing.setVehicle(vehicle);
 
         validateRecord(existing, vehicle);
@@ -105,6 +106,7 @@ public class MaintenanceService {
         dto.setVehicleId(record.getVehicle().getId());
         dto.setDescription(record.getDescription());
         dto.setDate(record.getServiceDate());
+        dto.setCost(record.getCost()); // 🔥 ADDED FIX HERE
 
         return dto;
     }
@@ -114,6 +116,7 @@ public class MaintenanceService {
 
         record.setDescription(request.getDescription());
         record.setServiceDate(request.getDate());
+        record.setCost(request.getCost()); // 🔥 ADDED FIX HERE
 
         return record;
     }
