@@ -34,9 +34,7 @@ dependencies {
     runtimeOnly ("io.jsonwebtoken:jjwt-jackson:0.12.5")
 
     // --- Database Drivers ---
-    runtimeOnly("com.h2database:h2")              // In-memory dev/test DB
-    runtimeOnly("com.mysql:mysql-connector-j")   // Production DB option
-
+    runtimeOnly("org.postgresql:postgresql")
 
     // --- Testing ---
     testImplementation("org.springframework.boot:spring-boot-starter-test")
