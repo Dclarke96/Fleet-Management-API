@@ -4,13 +4,17 @@ import java.time.LocalDate;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO;
 import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
 import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
+import com.dylanclarke.FleetManagementAPI.model.User;
 import com.dylanclarke.FleetManagementAPI.model.Vehicle;
+import com.dylanclarke.FleetManagementAPI.repository.UserRepository;
 import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
 
 @Service
@@ -18,16 +22,24 @@ import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
 public class VehicleService {
 
     private final VehicleRepository repository;
+    private final UserRepository userRepository;
 
-    public VehicleService(VehicleRepository repository) {
+    public VehicleService(
+            VehicleRepository repository,
+            UserRepository userRepository
+    ) {
         this.repository = repository;
+        this.userRepository = userRepository;
     }
 
     // ----------------------------------------
     // GET ALL (PAGINATED)
     // ----------------------------------------
     public Page<VehicleResponseDTO> getAllVehicles(Pageable pageable) {
-        return repository.findAll(pageable)
+
+        Long companyId = getCurrentCompanyId();
+
+        return repository.findByCompanyId(companyId, pageable)
                 .map(this::toDto);
     }
 
@@ -35,7 +47,10 @@ public class VehicleService {
     // GET BY ID
     // ----------------------------------------
     public VehicleResponseDTO getVehicleById(Long id) {
-        Vehicle vehicle = repository.findById(id)
+
+        Long companyId = getCurrentCompanyId();
+
+        Vehicle vehicle = repository.findByIdAndCompanyId(id, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", id));
 
         return toDto(vehicle);
@@ -45,7 +60,10 @@ public class VehicleService {
     // SEARCH (PAGINATED)
     // ----------------------------------------
     public Page<VehicleResponseDTO> searchVehicles(String query, Pageable pageable) {
-        return repository.searchVehicles(query, pageable)
+
+        Long companyId = getCurrentCompanyId();
+
+        return repository.searchVehiclesByCompany(companyId, query, pageable)
                 .map(this::toDto);
     }
 
@@ -55,6 +73,16 @@ public class VehicleService {
     public VehicleResponseDTO addVehicle(VehicleRequestDTO dto) {
 
         Vehicle entity = toEntity(dto);
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String username = authentication.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        entity.setCompany(user.getCompany());
 
         validateVehicle(entity);
 
@@ -68,7 +96,9 @@ public class VehicleService {
     // ----------------------------------------
     public VehicleResponseDTO updateVehicle(Long id, VehicleRequestDTO dto) {
 
-        Vehicle existing = repository.findById(id)
+        Long companyId = getCurrentCompanyId();
+
+        Vehicle existing = repository.findByIdAndCompanyId(id, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", id));
 
         updateEntityFromDto(existing, dto);
@@ -85,10 +115,28 @@ public class VehicleService {
     // ----------------------------------------
     public void deleteVehicle(Long id) {
 
-        Vehicle vehicle = repository.findById(id)
+        Long companyId = getCurrentCompanyId();
+
+        Vehicle vehicle = repository.findByIdAndCompanyId(id, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", id));
 
         repository.delete(vehicle);
+    }
+
+    // ----------------------------------------
+    // CURRENT COMPANY HELPER
+    // ----------------------------------------
+    private Long getCurrentCompanyId() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String username = authentication.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return user.getCompany().getId();
     }
 
     // ----------------------------------------------------
@@ -130,7 +178,13 @@ public class VehicleService {
         }
 
         v.setLocation(dto.getLocation());
-        v.setMaintenanceAlertsEnabled(dto.getMaintenanceAlertsEnabled() != null ? dto.getMaintenanceAlertsEnabled() : false);
+
+        v.setMaintenanceAlertsEnabled(
+                dto.getMaintenanceAlertsEnabled() != null
+                        ? dto.getMaintenanceAlertsEnabled()
+                        : false
+        );
+
         v.setStartDate(dto.getStartDate());
         v.setEndDate(dto.getEndDate());
 
@@ -163,12 +217,15 @@ public class VehicleService {
 
         if (vehicle.getMake() == null || vehicle.getMake().isEmpty() ||
             vehicle.getModel() == null || vehicle.getModel().isEmpty()) {
+
             throw new ValidationException("Make and model are required");
         }
 
         int currentYear = LocalDate.now().getYear();
 
-        if (vehicle.getVehicleYear() < 1900 || vehicle.getVehicleYear() > currentYear) {
+        if (vehicle.getVehicleYear() < 1900 ||
+            vehicle.getVehicleYear() > currentYear) {
+
             throw new ValidationException(
                     "Year must be between 1900 and " + currentYear,
                     "vehicleYear",
@@ -180,11 +237,20 @@ public class VehicleService {
         LocalDate end = vehicle.getEndDate();
 
         if (start == null) {
-            throw new ValidationException("Start date is required", "startDate", null);
+            throw new ValidationException(
+                    "Start date is required",
+                    "startDate",
+                    null
+            );
         }
 
         if (end != null && end.isBefore(start)) {
-            throw new ValidationException("End date cannot be before start date", "endDate", end);
+
+            throw new ValidationException(
+                    "End date cannot be before start date",
+                    "endDate",
+                    end
+            );
         }
     }
 }

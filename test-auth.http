@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:8080/api
+@baseUrl = https://fleet-management-api-beff.onrender.com/api
 @username = persistentUser2
 @password = 1234
 
