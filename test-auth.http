@@ -1,6 +1,8 @@
 @baseUrl = http://localhost:8080
 @username = persistentUser2
 @password = 1234
+@authToken = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3ODE4MjMzMzYsImV4cCI6MTc4MTgyNjkzNn0.NLtsAZM0vSonnrcXcNyp34CnnqaF6fNmJLBRHr7jXNGND4ZXFSQq3vDbr-mAyfPtYK33hdhahFiCs_EAA0Lu_A
+@invalidToken = expiredToken123
 
 # =====================================================
 # 🔐 AUTH - REGISTER (Persistent User for Login Flow)
@@ -41,7 +43,16 @@ Content-Type: application/json
 # 🔒 AUTH - ACCESS PROTECTED ROUTE (VALID TOKEN)
 # =====================================================
 GET {{baseUrl}}/api/vehicles
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+Authorization: Bearer {{authToken}}
+
+###
+
+# =====================================================
+# ❌ AUTH - MALFORMED AUTH HEADER
+# =====================================================
+
+GET {{baseUrl}}/api/vehicles
+Authorization: abc123
 
 ###
 
@@ -61,7 +72,7 @@ Content-Type: application/json
 # =====================================================
 # ❌ AUTH - REGISTER (Invalid Input Validation Test)
 # =====================================================
-POST {{baseUrl}}/auth/register
+POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
@@ -75,7 +86,7 @@ Content-Type: application/json
 # =====================================================
 # 🧪 AUTH - REGISTER (Unique User Test)
 # =====================================================
-POST {{baseUrl}}/auth/register
+POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
@@ -89,23 +100,23 @@ Content-Type: application/json
 # =====================================================
 # ❌ AUTH - ACCESS PROTECTED ROUTE (NO TOKEN)
 # =====================================================
-GET {{baseUrl}}/vehicles
+GET {{baseUrl}}/api/vehicles
 
 ###
 
 # =====================================================
 # ❌ AUTH - ACCESS PROTECTED ROUTE (INVALID TOKEN)
 # =====================================================
-GET {{baseUrl}}/vehicles
-Authorization: Bearer invalidToken123
+GET {{baseUrl}}/api/vehicles
+Authorization: Bearer {{invalidToken}}
 
 ###
 
 # =====================================================
 # 🚗 VEHICLE - CREATE (Authenticated)
 # =====================================================
-POST {{baseUrl}}/vehicles
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+POST {{baseUrl}}/api/vehicles
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
@@ -130,16 +141,16 @@ Content-Type: application/json
 # =====================================================
 # 🚗 VEHICLE - GET BY ID
 # =====================================================
-GET {{baseUrl}}/vehicles/2
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+GET {{baseUrl}}/api/vehicles/2
+Authorization: Bearer {{authToken}}
 
 ###
 
 # =====================================================
 # 🚗 VEHICLE - UPDATE
 # =====================================================
-PUT {{baseUrl}}/vehicles/2
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+PUT {{baseUrl}}/api/vehicles/2
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
@@ -158,23 +169,23 @@ Content-Type: application/json
 # =====================================================
 # 🚗 VEHICLE - SEARCH
 # =====================================================
-GET {{baseUrl}}/vehicles/search?q=Manual&page=0&size=10
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+GET {{baseUrl}}/api/vehicles/search?q=Manual&page=0&size=10
+Authorization: Bearer {{authToken}}
 
 ###
 
 # =====================================================
 # 🚗 VEHICLE - DELETE
 # =====================================================
-DELETE {{baseUrl}}/vehicles/2
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+DELETE {{baseUrl}}/api/vehicles/2
+Authorization: Bearer {{authToken}}
 
 ###
 
 # =====================================================
 # 🚗 VEHICLE - VERIFY DELETE (SHOULD FAIL OR 404)
 # =====================================================
-GET {{baseUrl}}/vehicles/2
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+GET {{baseUrl}}/api/vehicles/2
+Authorization: Bearer {{authToken}}
 
 ###

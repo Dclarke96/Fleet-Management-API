@@ -15,27 +15,30 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.dylanclarke.FleetManagementAPI.util.JwtAuthFilter;
-import com.dylanclarke.FleetManagementAPI.util.JwtService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     // =========================
-    // AUTH MANAGER (IMPORTANT FIX)
+    // AUTH MANAGER
     // =========================
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+
         return config.getAuthenticationManager();
     }
 
     // =========================
-    // USER DETAILS SERVICE (STOPS DEFAULT LOGIN)
+    // USER DETAILS SERVICE
+    // (Prevents Spring Boot from creating a default user)
     // =========================
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
-            throw new UnsupportedOperationException("JWT authentication only. No in-memory login.");
+            throw new UnsupportedOperationException(
+                    "JWT authentication only. No in-memory login.");
         };
     }
 
@@ -44,40 +47,52 @@ public class SecurityConfig {
     // =========================
     @Bean
     @Profile("!test")
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthFilter jwtAuthFilter) throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form.disable())
-            .httpBasic(httpBasic -> httpBasic.disable())
-            .addFilterBefore(new JwtAuthFilter(jwtService),
-                    UsernamePasswordAuthenticationFilter.class);
+                .csrf(csrf -> csrf.disable())
+
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .anyRequest().authenticated())
+
+                .formLogin(form -> form.disable())
+
+                .httpBasic(httpBasic -> httpBasic.disable())
+
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
 
     // =========================
-    // TEST SECURITY (DISABLED AUTH)
+    // TEST SECURITY
     // =========================
     @Bean
     @Profile("test")
-    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http)
+            throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-            .formLogin(form -> form.disable())
-            .httpBasic(httpBasic -> httpBasic.disable());
+                .csrf(csrf -> csrf.disable())
+
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .authorizeHttpRequests(auth ->
+                        auth.anyRequest().permitAll())
+
+                .formLogin(form -> form.disable())
+
+                .httpBasic(httpBasic -> httpBasic.disable());
 
         return http.build();
     }
