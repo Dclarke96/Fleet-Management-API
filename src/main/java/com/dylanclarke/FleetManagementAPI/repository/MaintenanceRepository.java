@@ -8,9 +8,12 @@ import org.springframework.stereotype.Repository;
 import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
 import com.dylanclarke.FleetManagementAPI.model.Vehicle;
 
+import java.util.Optional;
+
 @Repository
 public interface MaintenanceRepository extends JpaRepository<MaintenanceRecord, Long> {
 
-    // Paginated + sortable query
     Page<MaintenanceRecord> findByVehicle(Vehicle vehicle, Pageable pageable);
+
+    Optional<MaintenanceRecord> findByIdAndVehicle(Long id, Vehicle vehicle);
 }

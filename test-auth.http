@@ -1,11 +1,11 @@
-@baseUrl = https://fleet-management-api-beff.onrender.com/api
+@baseUrl = http://localhost:8080
 @username = persistentUser2
 @password = 1234
 
 # =====================================================
 # 🔐 AUTH - REGISTER (Persistent User for Login Flow)
 # =====================================================
-POST {{baseUrl}}/auth/register
+POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
@@ -19,7 +19,7 @@ Content-Type: application/json
 # =====================================================
 # 🔐 AUTH - LOGIN (Capture Token)
 # =====================================================
-POST {{baseUrl}}/auth/login
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
@@ -40,7 +40,7 @@ Content-Type: application/json
 # =====================================================
 # 🔒 AUTH - ACCESS PROTECTED ROUTE (VALID TOKEN)
 # =====================================================
-GET {{baseUrl}}/vehicles
+GET {{baseUrl}}/api/vehicles
 Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
 
 ###
@@ -48,7 +48,7 @@ Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpY
 # =====================================================
 # ❌ AUTH - LOGIN (Wrong Password)
 # =====================================================
-POST {{baseUrl}}/auth/login
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {

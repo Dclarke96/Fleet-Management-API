@@ -45,6 +45,8 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> register(
             @Valid @RequestBody RegisterRequest request) {
 
+                 System.out.println("🔥 REGISTER CONTROLLER HIT");
+
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
                 return ResponseEntity.status(409)
                         .body(new ApiResponse<>(false, null, "Username already exists"));
