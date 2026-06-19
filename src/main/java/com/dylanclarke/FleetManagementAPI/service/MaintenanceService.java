@@ -1,10 +1,6 @@
 package com.dylanclarke.FleetManagementAPI.service;
 
-import java.time.LocalDate;
-import java.util.List;
-
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,11 +11,11 @@ import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
 import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
 import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
 import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
-import com.dylanclarke.FleetManagementAPI.model.Vehicle;
 import com.dylanclarke.FleetManagementAPI.model.User;
+import com.dylanclarke.FleetManagementAPI.model.Vehicle;
 import com.dylanclarke.FleetManagementAPI.repository.MaintenanceRepository;
-import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
 import com.dylanclarke.FleetManagementAPI.repository.UserRepository;
+import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
 
 @Service
 @SuppressWarnings("null")
@@ -60,19 +56,9 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        Page<MaintenanceRecord> page = maintenanceRepository.findAll(pageable);
-
-        List<MaintenanceResponseDTO> filtered = page.getContent().stream()
-                .filter(record ->
-                        record.getVehicle()
-                            .getCompany()
-                            .getId()
-                            .equals(companyId)
-                )
-                .map(this::mapToDTO)
-                .toList();
-
-        return new PageImpl<>(filtered, pageable, filtered.size());
+        return maintenanceRepository
+                .findByVehicle_Company_Id(companyId, pageable)
+                .map(this::mapToDTO);
     }
 
     // ----------------------------------------------------
@@ -82,12 +68,10 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        MaintenanceRecord record = maintenanceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Maintenance record", "id", id));
-
-        if (!record.getVehicle().getCompany().getId().equals(companyId)) {
-            throw new ResourceNotFoundException("Maintenance record", "id", id);
-        }
+        MaintenanceRecord record = maintenanceRepository
+                .findByIdAndVehicle_Company_Id(id, companyId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Maintenance record", "id", id));
 
         return mapToDTO(record);
     }
@@ -99,14 +83,9 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
-
-        if (!vehicle.getCompany().getId().equals(companyId)) {
-            throw new ResourceNotFoundException("Vehicle", "id", vehicleId);
-        }
-
-        return maintenanceRepository.findByVehicle(vehicle, pageable)
+        // single tenant-safe query (no extra validation needed)
+        return maintenanceRepository
+                .findByVehicle_IdAndVehicle_Company_Id(vehicleId, companyId, pageable)
                 .map(this::mapToDTO);
     }
 
@@ -175,12 +154,10 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        MaintenanceRecord record = maintenanceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Maintenance record", "id", id));
-
-        if (!record.getVehicle().getCompany().getId().equals(companyId)) {
-            throw new ResourceNotFoundException("Maintenance record", "id", id);
-        }
+        MaintenanceRecord record = maintenanceRepository
+                .findByIdAndVehicle_Company_Id(id, companyId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Maintenance record", "id", id));
 
         maintenanceRepository.delete(record);
     }
