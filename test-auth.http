@@ -4,6 +4,10 @@
 @authToken = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3ODE4MjMzMzYsImV4cCI6MTc4MTgyNjkzNn0.NLtsAZM0vSonnrcXcNyp34CnnqaF6fNmJLBRHr7jXNGND4ZXFSQq3vDbr-mAyfPtYK33hdhahFiCs_EAA0Lu_A
 @invalidToken = expiredToken123
 
+@usernameB = persistentUserB
+@passwordB = 1234
+@authTokenB = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlckIiLCJpYXQiOjE3ODE4MzEwNjQsImV4cCI6MTc4MTgzNDY2NH0.3IG-hGrwcJHDur7bvod6uYppNZYBipKqRvMGRcNXPUkyj2i8QQyN-6MBNtf-hc8GesosRgKt8Bv4UsyyS4Rzlw
+
 # =====================================================
 # 🔐 AUTH - REGISTER (Persistent User for Login Flow)
 # =====================================================
@@ -187,5 +191,118 @@ Authorization: Bearer {{authToken}}
 # =====================================================
 GET {{baseUrl}}/api/vehicles/2
 Authorization: Bearer {{authToken}}
+
+###
+
+
+# =====================================================
+# 🔐 AUTH - LOGIN (SECOND USER - COMPANY B)
+# =====================================================
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{usernameB}}",
+  "password": "{{passwordB}}"
+}
+
+> {%
+    console.log("LOGIN B RESPONSE BODY:", response.body);
+    client.global.set("authTokenB", response.body.data);
+%}
+
+###
+
+# =====================================================
+# 🧪 VEHICLE - CREATE (COMPANY B VEHICLE)
+# =====================================================
+POST {{baseUrl}}/api/vehicles
+Authorization: Bearer {{authTokenB}}
+Content-Type: application/json
+
+{
+  "title": "Company B Vehicle",
+  "make": "Honda",
+  "model": "Civic",
+  "vehicleYear": 2021,
+  "location": "B Garage",
+  "maintenanceAlertsEnabled": true,
+  "startDate": "2026-05-01",
+  "endDate": "2026-12-31"
+}
+
+> {%
+    console.log("CREATED VEHICLE B:", response.body);
+    client.global.set("vehicleIdB", response.body.data.id);
+%}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 1 - CROSS COMPANY VEHICLE ACCESS
+# =====================================================
+GET {{baseUrl}}/api/vehicles/{{vehicleIdB}}
+Authorization: Bearer {{authToken}}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 2 - CROSS COMPANY MAINTENANCE CREATE ATTEMPT
+# =====================================================
+POST {{baseUrl}}/api/maintenance
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "vehicleId": "{{vehicleIdB}}",
+  "description": "Illegal cross-company test",
+  "date": "2026-01-01",
+  "cost": 100
+}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 3 - MAINTENANCE ISOLATION CHECK (CREATE)
+# =====================================================
+POST {{baseUrl}}/api/maintenance
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "vehicleId": "{{vehicleId}}",
+  "description": "Oil Change A",
+  "date": "2026-01-01",
+  "cost": 50
+}
+
+> {%
+    console.log("MAINTENANCE CREATED A:", response.body);
+    client.global.set("maintenanceIdA", response.body.data.id);
+%}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 4 - MAINTENANCE ISOLATION CHECK (ACCESS AS B)
+# =====================================================
+GET {{baseUrl}}/api/maintenance/{{maintenanceIdA}}
+Authorization: Bearer {{authTokenB}}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 5 - LIST ISOLATION CHECK (COMPANY A)
+# =====================================================
+GET {{baseUrl}}/api/maintenance
+Authorization: Bearer {{authToken}}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 6 - LIST ISOLATION CHECK (COMPANY B)
+# =====================================================
+GET {{baseUrl}}/api/maintenance
+Authorization: Bearer {{authTokenB}}
 
 ###

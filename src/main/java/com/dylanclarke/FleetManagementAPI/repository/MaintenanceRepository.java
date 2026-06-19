@@ -22,4 +22,5 @@ public interface MaintenanceRepository extends JpaRepository<MaintenanceRecord, 
     Optional<MaintenanceRecord> findByIdAndVehicle_Company_Id(Long id, Long companyId);
 
     Page<MaintenanceRecord> findByVehicle_IdAndVehicle_Company_Id(Long vehicleId, Long companyId, Pageable pageable);
+
 }

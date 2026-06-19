@@ -83,7 +83,6 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        // single tenant-safe query (no extra validation needed)
         return maintenanceRepository
                 .findByVehicle_IdAndVehicle_Company_Id(vehicleId, companyId, pageable)
                 .map(this::mapToDTO);
@@ -96,12 +95,10 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        Vehicle vehicle = vehicleRepository.findById(request.getVehicleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", request.getVehicleId()));
-
-        if (!vehicle.getCompany().getId().equals(companyId)) {
-            throw new ResourceNotFoundException("Vehicle", "id", request.getVehicleId());
-        }
+        Vehicle vehicle = vehicleRepository
+                .findByIdAndCompanyId(request.getVehicleId(), companyId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Vehicle", "id", request.getVehicleId()));
 
         MaintenanceRecord record = mapToEntity(request);
 
@@ -121,19 +118,15 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        MaintenanceRecord existing = maintenanceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Maintenance record", "id", id));
+        MaintenanceRecord existing = maintenanceRepository
+                .findByIdAndVehicle_Company_Id(id, companyId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Maintenance record", "id", id));
 
-        if (!existing.getVehicle().getCompany().getId().equals(companyId)) {
-            throw new ResourceNotFoundException("Maintenance record", "id", id);
-        }
-
-        Vehicle vehicle = vehicleRepository.findById(request.getVehicleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", request.getVehicleId()));
-
-        if (!vehicle.getCompany().getId().equals(companyId)) {
-            throw new ResourceNotFoundException("Vehicle", "id", request.getVehicleId());
-        }
+        Vehicle vehicle = vehicleRepository
+                .findByIdAndCompanyId(request.getVehicleId(), companyId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Vehicle", "id", request.getVehicleId()));
 
         existing.setDescription(request.getDescription());
         existing.setServiceDate(request.getDate());
@@ -207,7 +200,7 @@ public class MaintenanceService {
         }
 
         if (vehicle.getEndDate() != null &&
-            record.getServiceDate().isAfter(vehicle.getEndDate())) {
+                record.getServiceDate().isAfter(vehicle.getEndDate())) {
             throw new ValidationException("Invalid service date");
         }
     }
