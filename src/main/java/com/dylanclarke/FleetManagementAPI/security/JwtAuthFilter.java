@@ -1,4 +1,4 @@
-package com.dylanclarke.FleetManagementAPI.util;
+package com.dylanclarke.FleetManagementAPI.security;
 
 import java.io.IOException;
 import java.util.Collections;

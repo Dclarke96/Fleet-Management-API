@@ -15,7 +15,7 @@ import com.dylanclarke.FleetManagementAPI.model.Role;
 import com.dylanclarke.FleetManagementAPI.model.User;
 import com.dylanclarke.FleetManagementAPI.repository.CompanyRepository;
 import com.dylanclarke.FleetManagementAPI.repository.UserRepository;
-import com.dylanclarke.FleetManagementAPI.util.JwtService;
+import com.dylanclarke.FleetManagementAPI.security.JwtService;
 
 import jakarta.validation.Valid;
 

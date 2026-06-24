@@ -55,6 +55,6 @@ src/main/java/com/fleetmanagement/
 - Input validation at API boundary (Jakarta Validation).
 - Business rule validation inside Domain models / Use Cases.
 
-## Architecture Diagram
+## Architecture Diagram (Needs Updating)
 
 architecture.png
