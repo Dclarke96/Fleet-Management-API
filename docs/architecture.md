@@ -1,55 +1,60 @@
 # Architecture Overview
 
-## Project Structure
+## Current State & Target Architecture
 
-The Fleet Management API backend follows a **3-tier layered architecture**:
+The Fleet Management API started with a **classic 3-tier layered architecture** (Controller → Service → Repository). This served us well for initial development and getting the app into private testing.
 
-1. **Controller Layer**  
-   - Handles HTTP requests and responses.  
-   - Maps incoming requests to service methods.  
-   - Controllers:
-     - `VehicleController.java` → `/api/vehicles`
-     - `MaintenanceController.java` → `/api/maintenance`
+We are now evolving toward a **Clean Architecture (Domain-Centric)** style for better long-term maintainability, testability, and reusability as a template for future projects.
 
-2. **Service Layer**  
-   - Encapsulates business logic and validation.  
-   - Handles relationships between entities.  
-   - Services:
-     - `VehicleService.java` → CRUD operations, search functionality, DTO mapping  
-     - `MaintenanceService.java` → Validation and maintenance management
+### Why the Evolution?
+- Protect core business logic (vehicles, trips, maintenance rules, alerts, etc.) from framework and infrastructure details.
+- Make the domain portable for other apps.
+- Improve separation of concerns as we add production features (auth, background jobs, reporting, notifications).
 
-3. **Repository Layer**  
-   - Handles data persistence using Spring Data JPA.  
-   - Repositories:
-     - `VehicleRepository.java` → Custom search queries
-     - `MaintenanceRepository.java` → Maintenance queries by vehicle, ordered by date
+### Target Structure (Gradual Migration)
+src/main/java/com/fleetmanagement/
+├── domain/                  # Core business rules - framework independent
+│   ├── model/               # Entities, Value Objects, Aggregates
+│   ├── repository/          # Repository interfaces (no JPA here)
+│   ├── service/             # Domain services (rich business logic)
+│   └── usecase/             # Application services / Use cases
+│
+├── application/             # Orchestration, DTOs, input/output models
+│
+├── infrastructure/          # Adapters
+│   ├── persistence/         # JPA implementations, repositories
+│   ├── web/                 # Controllers, REST adapters
+│   ├── external/            # Third-party integrations (GPS, notifications)
+│   └── config/              # Spring wiring, security, etc.
+│
+├── common/                  # Shared utilities, exceptions, constants
+└── FleetManagementApplication.java
+
+
+**Migration Strategy (Strangler Fig)**: We refactor one vertical slice at a time (e.g., Vehicle management first, then Maintenance). Existing layered code remains functional until migrated.
+
+## Current Layers (During Transition)
+
+1. **Web/Controller Layer** – HTTP handling (thin adapters)
+2. **Application/Service Layer** – Use cases and orchestration
+3. **Domain Layer** – Business entities and rules (growing)
+4. **Infrastructure/Persistence Layer** – Data access implementations
 
 ## Entities & Relationships
 
-- **Vehicle.java**
-  - Fields: `title`, `VIN`, `licensePlate`, `make`, `model`, `vehicleYear`, `location`, maintenance alerts
-  - Validation: `@NotBlank`, `@Size`, `@Min`
-  - Relationships: One-to-many with `MaintenanceRecord`
-
-- **MaintenanceRecord.java**
-  - Tracks maintenance events for vehicles
-  - Fields: `description`, `serviceDate`, `alertsEnabled`
-  - Relationships: Many-to-one with `Vehicle`
+- **Vehicle** (Domain Model): Core entity with business rules (VIN validation, status transitions, maintenance alerts logic).
+- **MaintenanceRecord**: Tracks history with invariants (e.g., cannot schedule past dates for active vehicles).
 
 ## Data Transfer Objects (DTOs)
 
-- `VehicleRequestDTO.java` → input validation for API requests
-- `VehicleResponseDTO.java` → structured API responses
-
-DTOs **decouple API representation from internal entity structure** for better maintainability and flexibility.
+- `VehicleRequestDTO` / `VehicleResponseDTO` live in the application/web layer.
+- Strict separation: DTOs for API contracts, Domain models for business logic.
 
 ## Validation
 
-- Jakarta Validation annotations ensure data integrity before hitting business logic:
-  - `@NotBlank` for required fields
-  - `@Size` for string length limits
-  - `@Min` for numeric minimums
+- Input validation at API boundary (Jakarta Validation).
+- Business rule validation inside Domain models / Use Cases.
 
 ## Architecture Diagram
 
-![Architecture Diagram](architecture.png)
+architecture.png

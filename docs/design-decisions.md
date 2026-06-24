@@ -1,25 +1,28 @@
 # Design Decisions
 
-## Layered Architecture
-- **Controller → Service → Repository** separation ensures:
-  - Maintainable and testable code
-  - Clear separation of business logic from API handling
+## Architecture Style
+- **Started with Layered Architecture** for rapid development.
+- **Evolving to Clean/Domain-Centric Architecture** because:
+  - Better isolation of business logic (critical for fleet rules).
+  - Easier testing of core domain.
+  - Higher reusability as a template for other projects.
+  - Reduced coupling to Spring Data JPA, HTTP, etc.
+
+**ADR-001**: Adopt Clean Architecture incrementally (dated: June 2026).
 
 ## DTO Usage
-- **VehicleRequestDTO / VehicleResponseDTO**
-  - Prevents exposing internal entities
-  - Validates input before reaching service layer
-  - Standardizes API responses
+- Input/Output DTOs decouple API from domain models.
+- Prevents leakage of internal structure and enables future API changes (GraphQL, etc.) with minimal impact.
 
-## Validation
-- Jakarta Validation annotations (`@NotBlank`, `@Size`, `@Min`) ensure:
-  - Clean, predictable input
-  - Reduced chance of invalid data in the database
+## Validation Strategy
+- **API Layer**: Structural + syntactic validation (`@NotBlank`, `@Size`, etc.).
+- **Domain Layer**: Semantic/business rule validation (e.g., VIN format, maintenance scheduling invariants).
 
-## Repository Queries
-- Custom search queries in `VehicleRepository` allow flexible filtering by title, make, model, and location
-- MaintenanceRepository provides ordered retrieval for reporting and alerts
+## Repository Pattern
+- Interfaces defined in Domain/Application layer.
+- Concrete implementations (JPA) in Infrastructure.
+- This follows Dependency Inversion Principle.
 
-## Service Layer
-- Business logic (like relationships between Vehicle and MaintenanceRecord) is encapsulated in services
-- Facilitates testing independent of HTTP requests
+## Service / Use Case Layer
+- Business logic is moving into rich Domain models and dedicated Use Cases (e.g., `RegisterVehicleUseCase`).
+- Avoids "fat service" anti-pattern common in pure layered designs.

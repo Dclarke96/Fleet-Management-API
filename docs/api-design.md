@@ -1,5 +1,7 @@
 # API Design
 
+**Note**: Endpoints remain stable during architecture refactoring. Controllers are being made thinner as we introduce Use Cases.
+
 ## Vehicle Endpoints (`/api/vehicles`)
 
 ### GET /api/vehicles
