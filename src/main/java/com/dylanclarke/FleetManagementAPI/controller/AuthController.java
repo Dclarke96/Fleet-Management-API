@@ -82,7 +82,7 @@ public class AuthController {
                     .body(new ApiResponse<>(false, null, "Invalid credentials"));
         }
 
-        String token = jwtService.generateToken(user.getUsername());
+        String token = jwtService.generateToken(user);
 
         return ResponseEntity.ok(
                 new ApiResponse<>(true, token, "Login successful")
