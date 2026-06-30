@@ -88,7 +88,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth ->
-                        auth.anyRequest().permitAll())
+                        auth.anyRequest().authenticated())
 
                 .formLogin(form -> form.disable())
 
