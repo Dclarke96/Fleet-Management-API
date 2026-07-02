@@ -1,21 +1,25 @@
 package com.dylanclarke.FleetManagementAPI.security;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import com.dylanclarke.FleetManagementAPI.model.User;
 
 @Service
 public class CurrentUserService {
 
-    public String getUsername() {
+    public CurrentUser get() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
 
-        User user = (User) authentication.getPrincipal();
-
-        return user.getUsername();
+        return new CurrentUser(
+            user.getId(),
+            user.getCompanyId(),
+            user.getUsername(),
+            user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList()
+        );
     }
 }

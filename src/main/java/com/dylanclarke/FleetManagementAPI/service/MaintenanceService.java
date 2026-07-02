@@ -49,6 +49,12 @@ public class MaintenanceService {
         return user.getCompany().getId();
     }
 
+    private Vehicle getVehicleForCurrentCompany(Long vehicleId, Long companyId) {
+        return vehicleRepository.findByIdAndCompanyId(vehicleId, companyId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Vehicle", "id", vehicleId));
+    }
+
     // ----------------------------------------------------
     // GET ALL (TENANT SAFE VIA VEHICLE FILTER)
     // ----------------------------------------------------
@@ -68,10 +74,14 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        MaintenanceRecord record = maintenanceRepository
-                .findByIdAndVehicle_Company_Id(id, companyId)
+        MaintenanceRecord record = maintenanceRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Maintenance record", "id", id));
+
+        // enforce tenant safety via vehicle
+        if (!record.getVehicle().getCompany().getId().equals(companyId)) {
+            throw new ResourceNotFoundException("Maintenance record", "id", id);
+        }
 
         return mapToDTO(record);
     }
@@ -95,10 +105,7 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        Vehicle vehicle = vehicleRepository
-                .findByIdAndCompanyId(request.getVehicleId(), companyId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Vehicle", "id", request.getVehicleId()));
+        Vehicle vehicle = getVehicleForCurrentCompany(request.getVehicleId(), companyId);
 
         MaintenanceRecord record = mapToEntity(request);
 
@@ -106,9 +113,7 @@ public class MaintenanceService {
 
         record.setVehicle(vehicle);
 
-        MaintenanceRecord saved = maintenanceRepository.save(record);
-
-        return mapToDTO(saved);
+        return mapToDTO(maintenanceRepository.save(record));
     }
 
     // ----------------------------------------------------
@@ -118,15 +123,15 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        MaintenanceRecord existing = maintenanceRepository
-                .findByIdAndVehicle_Company_Id(id, companyId)
+        MaintenanceRecord existing = maintenanceRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Maintenance record", "id", id));
 
-        Vehicle vehicle = vehicleRepository
-                .findByIdAndCompanyId(request.getVehicleId(), companyId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Vehicle", "id", request.getVehicleId()));
+        if (!existing.getVehicle().getCompany().getId().equals(companyId)) {
+            throw new ResourceNotFoundException("Maintenance record", "id", id);
+        }
+
+        Vehicle vehicle = getVehicleForCurrentCompany(request.getVehicleId(), companyId);
 
         existing.setDescription(request.getDescription());
         existing.setServiceDate(request.getDate());
@@ -135,9 +140,7 @@ public class MaintenanceService {
 
         validateRecord(existing, vehicle);
 
-        MaintenanceRecord updated = maintenanceRepository.save(existing);
-
-        return mapToDTO(updated);
+        return mapToDTO(maintenanceRepository.save(existing));
     }
 
     // ----------------------------------------------------
@@ -147,10 +150,13 @@ public class MaintenanceService {
 
         Long companyId = getCurrentCompanyId();
 
-        MaintenanceRecord record = maintenanceRepository
-                .findByIdAndVehicle_Company_Id(id, companyId)
+        MaintenanceRecord record = maintenanceRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Maintenance record", "id", id));
+
+        if (!record.getVehicle().getCompany().getId().equals(companyId)) {
+            throw new ResourceNotFoundException("Maintenance record", "id", id);
+        }
 
         maintenanceRepository.delete(record);
     }
