@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.dylanclarke.FleetManagementAPI.api.ApiResponse;
 import com.dylanclarke.FleetManagementAPI.dto.AuthRequest;
 import com.dylanclarke.FleetManagementAPI.dto.RegisterRequest;
+import com.dylanclarke.FleetManagementAPI.exception.AuthenticationException;
 import com.dylanclarke.FleetManagementAPI.model.Company;
 import com.dylanclarke.FleetManagementAPI.model.Role;
 import com.dylanclarke.FleetManagementAPI.model.User;
@@ -63,14 +64,10 @@ public class AuthenticationService {
     public ApiResponse<String> login(AuthRequest request) {
 
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return new ApiResponse<>(
-                    false,
-                    null,
-                    "Invalid credentials"
-            );
+            throw new AuthenticationException("Invalid credentials");
         }
 
         String token = jwtService.generateToken(user);

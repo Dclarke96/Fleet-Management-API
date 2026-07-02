@@ -171,6 +171,28 @@ public class GlobalExceptionHandler {
     }
 
     /**
+    * Handle AuthenticationException - when authentication fails
+    */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(
+           AuthenticationException ex,
+           HttpServletRequest request) {
+
+       String traceId = UUID.randomUUID().toString();
+       logger.warn("Authentication failed [TraceId: {}]: {}", traceId, ex.getMessage());
+
+       ErrorResponse response = new ErrorResponse(
+               HttpStatus.UNAUTHORIZED.value(),
+               "Unauthorized",
+               ex.getMessage(),
+               request.getRequestURI(),
+               traceId
+       );
+
+       return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
      * Handle all other uncaught exceptions
      */
     @ExceptionHandler(Exception.class)
