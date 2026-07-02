@@ -1,6 +1,5 @@
 package com.dylanclarke.FleetManagementAPI.service;
 
-import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +13,8 @@ import com.dylanclarke.FleetManagementAPI.model.User;
 import com.dylanclarke.FleetManagementAPI.repository.CompanyRepository;
 import com.dylanclarke.FleetManagementAPI.repository.UserRepository;
 import com.dylanclarke.FleetManagementAPI.security.JwtService;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class AuthenticationService {

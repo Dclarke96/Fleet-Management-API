@@ -128,13 +128,9 @@ public class VehicleService {
     // ----------------------------------------
     private Long getCurrentCompanyId() {
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        String username = authentication.getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = (User) authentication.getPrincipal();
 
         return user.getCompany().getId();
     }

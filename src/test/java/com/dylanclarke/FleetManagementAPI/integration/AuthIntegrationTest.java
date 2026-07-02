@@ -172,7 +172,6 @@ class AuthIntegrationTest {
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
-                .andDo(print())
                 .andExpect(status().isUnauthorized());
     }
 
@@ -191,6 +190,7 @@ class AuthIntegrationTest {
 
         mockMvc.perform(get("/api/vehicles")
                 .header("Authorization", "Bearer " + token))
+                .andDo(print())
                 .andExpect(status().isOk());
     }
 

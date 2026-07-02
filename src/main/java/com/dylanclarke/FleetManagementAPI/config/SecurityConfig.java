@@ -77,23 +77,21 @@ public class SecurityConfig {
     // TEST SECURITY
     // =========================
     @Bean
-    @Profile("test")
-    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http)
-            throws Exception {
+     @Profile("test")
+        public SecurityFilterChain testSecurityFilterChain(
+                HttpSecurity http,
+              JwtAuthFilter jwtAuthFilter) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
-
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated())
-
                 .formLogin(form -> form.disable())
-
-                .httpBasic(httpBasic -> httpBasic.disable());
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
