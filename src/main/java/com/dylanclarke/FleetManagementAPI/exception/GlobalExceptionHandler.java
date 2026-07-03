@@ -24,10 +24,11 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final Logger logger =
+            LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
-     * Handle ResourceNotFoundException - when a requested resource doesn't exist
+     * Handle ResourceNotFoundException
      */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
@@ -35,7 +36,13 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String traceId = UUID.randomUUID().toString();
-        logger.warn("Resource not found [TraceId: {}]: {}", traceId, ex.getMessage());
+
+        logger.warn(
+                "RESOURCE_NOT_FOUND traceId={} uri={} message={}",
+                traceId,
+                request.getRequestURI(),
+                ex.getMessage()
+        );
 
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
@@ -49,7 +56,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handle ValidationException - when business logic validation fails
+     * Handle ValidationException
      */
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
@@ -57,7 +64,13 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String traceId = UUID.randomUUID().toString();
-        logger.warn("Validation error [TraceId: {}]: {}", traceId, ex.getMessage());
+
+        logger.warn(
+                "VALIDATION_FAILED traceId={} uri={} message={}",
+                traceId,
+                request.getRequestURI(),
+                ex.getMessage()
+        );
 
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
@@ -71,7 +84,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handle DuplicateResourceException - when attempting to create a duplicate resource
+     * Handle DuplicateResourceException
      */
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
@@ -79,7 +92,13 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String traceId = UUID.randomUUID().toString();
-        logger.warn("Duplicate resource [TraceId: {}]: {}", traceId, ex.getMessage());
+
+        logger.warn(
+                "DUPLICATE_RESOURCE traceId={} uri={} message={}",
+                traceId,
+                request.getRequestURI(),
+                ex.getMessage()
+        );
 
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
@@ -93,7 +112,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handle MethodArgumentNotValidException - when request body validation fails
+     * Handle MethodArgumentNotValidException
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
@@ -101,15 +120,6 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String traceId = UUID.randomUUID().toString();
-        logger.warn("Validation error [TraceId: {}]: Invalid request parameters", traceId);
-
-        ErrorResponse response = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                "Invalid Request",
-                "Request validation failed",
-                request.getRequestURI(),
-                traceId
-        );
 
         var fieldErrors = ex.getBindingResult()
                 .getFieldErrors()
@@ -120,14 +130,28 @@ public class GlobalExceptionHandler {
                         error.getRejectedValue()))
                 .collect(Collectors.toList());
 
+        logger.warn(
+                "REQUEST_VALIDATION_FAILED traceId={} uri={} fieldErrors={}",
+                traceId,
+                request.getRequestURI(),
+                fieldErrors
+        );
+
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Invalid Request",
+                "Request validation failed",
+                request.getRequestURI(),
+                traceId
+        );
+
         response.setFieldErrors(fieldErrors);
-        logger.debug("Field errors [TraceId: {}]: {}", traceId, fieldErrors);
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     /**
-     * Handle IllegalArgumentException - general validation errors
+     * Handle IllegalArgumentException
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
@@ -135,7 +159,13 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String traceId = UUID.randomUUID().toString();
-        logger.warn("Illegal argument [TraceId: {}]: {}", traceId, ex.getMessage());
+
+        logger.warn(
+                "BAD_REQUEST traceId={} uri={} message={}",
+                traceId,
+                request.getRequestURI(),
+                ex.getMessage()
+        );
 
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
@@ -149,7 +179,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handle 404 errors - endpoint not found
+     * Handle NoHandlerFoundException
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(
@@ -157,12 +187,20 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String traceId = UUID.randomUUID().toString();
-        logger.warn("Endpoint not found [TraceId: {}]: {} {}", traceId, ex.getHttpMethod(), ex.getRequestURL());
+
+        logger.warn(
+                "ENDPOINT_NOT_FOUND traceId={} method={} url={}",
+                traceId,
+                ex.getHttpMethod(),
+                ex.getRequestURL()
+        );
 
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
                 "Endpoint Not Found",
-                String.format("No handler found for %s %s", ex.getHttpMethod(), ex.getRequestURL()),
+                String.format("No handler found for %s %s",
+                        ex.getHttpMethod(),
+                        ex.getRequestURL()),
                 request.getRequestURI(),
                 traceId
         );
@@ -171,29 +209,37 @@ public class GlobalExceptionHandler {
     }
 
     /**
-    * Handle AuthenticationException - when authentication fails
-    */
+     * Handle AuthenticationException
+     *
+     * IMPORTANT: This is now the SINGLE place where auth failures are logged.
+     */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(
-              AuthenticationException ex,
-              HttpServletRequest request) {
+            AuthenticationException ex,
+            HttpServletRequest request) {
 
-          String traceId = UUID.randomUUID().toString();
-          logger.warn("Authentication failed [TraceId: {}]: {}", traceId, ex.getMessage());
+        String traceId = UUID.randomUUID().toString();
 
-          ErrorResponse response = new ErrorResponse(
-                  HttpStatus.UNAUTHORIZED.value(),
-                  "Unauthorized",
-                  ex.getMessage(),
-                  request.getRequestURI(),
-                  traceId
-          );
+        logger.warn(
+                "AUTH_FAILED traceId={} uri={} message={}",
+                traceId,
+                request.getRequestURI(),
+                ex.getMessage()
+        );
 
-          return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-        }
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                ex.getMessage(),
+                request.getRequestURI(),
+                traceId
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
 
     /**
-     * Handle all other uncaught exceptions
+     * Handle all unexpected exceptions
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
@@ -201,7 +247,14 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String traceId = UUID.randomUUID().toString();
-        logger.error("Unexpected error [TraceId: {}]: {}", traceId, ex.getMessage(), ex);
+
+        logger.error(
+                "UNEXPECTED_ERROR traceId={} uri={} message={}",
+                traceId,
+                request.getRequestURI(),
+                ex.getMessage(),
+                ex
+        );
 
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

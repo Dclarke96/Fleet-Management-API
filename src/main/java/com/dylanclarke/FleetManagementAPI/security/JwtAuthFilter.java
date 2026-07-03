@@ -27,13 +27,10 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(JwtAuthFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
 
     private final JwtService jwtService;
-
     private final UserRepository userRepository;
-
 
     public JwtAuthFilter(JwtService jwtService, UserRepository userRepository) {
         this.jwtService = jwtService;
@@ -52,6 +49,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (!StringUtils.hasText(authHeader)
                 || !authHeader.startsWith("Bearer ")) {
 
+            // Optional: keep this at DEBUG to avoid noise
+            log.debug("No JWT provided for request: {} {}", 
+                    request.getMethod(), 
+                    request.getRequestURI());
+
             filterChain.doFilter(request, response);
             return;
         }
@@ -68,39 +70,72 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 User user = userRepository.findByUsername(username)
                         .orElse(null);
 
-                if (user != null) {
+                if (user == null) {
 
-                    List<GrantedAuthority> authorities = List.of(
-                            new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+                    log.warn(
+                            "JWT authentication failed: user not found username={}",
+                            username
                     );
 
-                    CustomUserDetails principal = new CustomUserDetails(
-                    user.getId(),
-                    user.getCompany().getId(),
-                    user.getEmail(),
-                    user.getPassword(),
-                    authorities
-                    );
-
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    principal,
-                                    null,
-                                    authorities);
-
-                    authentication.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request));
-
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(authentication);
+                    filterChain.doFilter(request, response);
+                    return;
                 }
+
+                List<GrantedAuthority> authorities = List.of(
+                        new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+                );
+
+                CustomUserDetails principal = new CustomUserDetails(
+                        user.getId(),
+                        user.getCompany().getId(),
+                        user.getEmail(),
+                        user.getPassword(),
+                        authorities
+                );
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                principal,
+                                null,
+                                authorities
+                        );
+
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
+
+                log.info(
+                        "JWT authentication successful: userId={}, companyId={}, uri={}",
+                        user.getId(),
+                        user.getCompany().getId(),
+                        request.getRequestURI()
+                );
             }
 
-        } catch (JwtException | IllegalArgumentException ex) {
+        } catch (JwtException ex) {
+
+            log.warn(
+                    "JWT authentication failed: invalid token for request {} {}",
+                    request.getMethod(),
+                    request.getRequestURI()
+            );
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            
+            return;
+
+        } catch (IllegalArgumentException ex) {
+
+            log.warn(
+                    "JWT authentication failed: malformed token for request {} {}",
+                    request.getMethod(),
+                    request.getRequestURI()
+            );
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
