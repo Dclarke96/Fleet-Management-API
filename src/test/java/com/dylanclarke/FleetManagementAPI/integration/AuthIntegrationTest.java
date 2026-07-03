@@ -91,6 +91,7 @@ class AuthIntegrationTest {
     void shouldRegisterUserSuccessfully() throws Exception {
 
         registerRaw("user1")
+                .andDo(print())
                 .andExpect(status().isOk());
 
         Assertions.assertTrue(
@@ -190,7 +191,6 @@ class AuthIntegrationTest {
 
         mockMvc.perform(get("/api/vehicles")
                 .header("Authorization", "Bearer " + token))
-                .andDo(print())
                 .andExpect(status().isOk());
     }
 

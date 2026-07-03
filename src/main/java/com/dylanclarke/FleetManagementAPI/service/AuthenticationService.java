@@ -49,6 +49,7 @@ public class AuthenticationService {
 
         User user = new User();
         user.setUsername(request.getUsername());
+        user.setEmail(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.ADMIN);
         user.setCompany(company);
@@ -57,8 +58,8 @@ public class AuthenticationService {
 
         return new ApiResponse<>(
                 true,
-                "Registration successful",
-                "User registered successfully"
+                "User registered successfully",
+                null
         );
     }
 
