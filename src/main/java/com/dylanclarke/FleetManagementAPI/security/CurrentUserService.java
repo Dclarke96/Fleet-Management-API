@@ -22,4 +22,12 @@ public class CurrentUserService {
                 .toList()
         );
     }
+
+    public Long getCompanyId() {
+        return get().getCompanyId();
+    }
+
+    public Long getUserId() {
+        return get().getUserId();
+    }
 }

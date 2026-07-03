@@ -12,24 +12,26 @@ import com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO;
 import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
 import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
+import com.dylanclarke.FleetManagementAPI.model.Company;
 import com.dylanclarke.FleetManagementAPI.model.User;
 import com.dylanclarke.FleetManagementAPI.model.Vehicle;
 import com.dylanclarke.FleetManagementAPI.repository.UserRepository;
 import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
+import com.dylanclarke.FleetManagementAPI.security.CurrentUserService;
 
 @Service
 @SuppressWarnings("null")
 public class VehicleService {
 
     private final VehicleRepository repository;
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
 
     public VehicleService(
             VehicleRepository repository,
-            UserRepository userRepository
+            CurrentUserService currentUserService
     ) {
         this.repository = repository;
-        this.userRepository = userRepository;
+        this.currentUserService = currentUserService;
     }
 
     // ----------------------------------------
@@ -37,7 +39,7 @@ public class VehicleService {
     // ----------------------------------------
     public Page<VehicleResponseDTO> getAllVehicles(Pageable pageable) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         return repository.findByCompanyId(companyId, pageable)
                 .map(this::toDto);
@@ -48,7 +50,7 @@ public class VehicleService {
     // ----------------------------------------
     public VehicleResponseDTO getVehicleById(Long id) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         Vehicle vehicle = repository.findByIdAndCompanyId(id, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", id));
@@ -61,7 +63,7 @@ public class VehicleService {
     // ----------------------------------------
     public Page<VehicleResponseDTO> searchVehicles(String query, Pageable pageable) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         return repository.searchVehiclesByCompany(companyId, query, pageable)
                 .map(this::toDto);
@@ -72,17 +74,15 @@ public class VehicleService {
     // ----------------------------------------
     public VehicleResponseDTO addVehicle(VehicleRequestDTO dto) {
 
+        Long companyId = currentUserService.getCompanyId();
+
         Vehicle entity = toEntity(dto);
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+        // IMPORTANT: enforce tenant ownership via relationship
+        Company company = new Company();
+        company.setId(companyId);
 
-        String username = authentication.getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        entity.setCompany(user.getCompany());
+        entity.setCompany(company);
 
         validateVehicle(entity);
 
@@ -96,7 +96,7 @@ public class VehicleService {
     // ----------------------------------------
     public VehicleResponseDTO updateVehicle(Long id, VehicleRequestDTO dto) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         Vehicle existing = repository.findByIdAndCompanyId(id, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", id));
@@ -115,7 +115,7 @@ public class VehicleService {
     // ----------------------------------------
     public void deleteVehicle(Long id) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         Vehicle vehicle = repository.findByIdAndCompanyId(id, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", id));
@@ -124,21 +124,8 @@ public class VehicleService {
     }
 
     // ----------------------------------------
-    // CURRENT COMPANY HELPER
-    // ----------------------------------------
-    private Long getCurrentCompanyId() {
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        User user = (User) authentication.getPrincipal();
-
-        return user.getCompany().getId();
-    }
-
-    // ----------------------------------------------------
     // DTO MAPPING
-    // ----------------------------------------------------
-
+    // ----------------------------------------
     private VehicleResponseDTO toDto(Vehicle v) {
 
         VehicleResponseDTO dto = new VehicleResponseDTO();
@@ -150,7 +137,6 @@ public class VehicleService {
         dto.setMake(v.getMake());
         dto.setModel(v.getModel());
         dto.setVehicleYear(v.getVehicleYear());
-
         dto.setLocation(v.getLocation());
         dto.setMaintenanceAlertsEnabled(v.isMaintenanceAlertsEnabled());
         dto.setStartDate(v.getStartDate());
@@ -205,10 +191,9 @@ public class VehicleService {
         vehicle.setEndDate(dto.getEndDate());
     }
 
-    // ----------------------------------------------------
+    // ----------------------------------------
     // VALIDATION
-    // ----------------------------------------------------
-
+    // ----------------------------------------
     private void validateVehicle(Vehicle vehicle) {
 
         if (vehicle.getMake() == null || vehicle.getMake().isEmpty() ||

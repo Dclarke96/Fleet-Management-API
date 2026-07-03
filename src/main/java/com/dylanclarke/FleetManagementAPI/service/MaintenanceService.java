@@ -16,6 +16,7 @@ import com.dylanclarke.FleetManagementAPI.model.Vehicle;
 import com.dylanclarke.FleetManagementAPI.repository.MaintenanceRepository;
 import com.dylanclarke.FleetManagementAPI.repository.UserRepository;
 import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
+import com.dylanclarke.FleetManagementAPI.security.CurrentUserService;
 
 @Service
 @SuppressWarnings("null")
@@ -23,32 +24,19 @@ public class MaintenanceService {
 
     private final MaintenanceRepository maintenanceRepository;
     private final VehicleRepository vehicleRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
 
     public MaintenanceService(MaintenanceRepository maintenanceRepository,
                               VehicleRepository vehicleRepository,
-                              UserRepository userRepository) {
+                              CurrentUserService currentUserService) {
         this.maintenanceRepository = maintenanceRepository;
         this.vehicleRepository = vehicleRepository;
-        this.userRepository = userRepository;
+        this.currentUserService = currentUserService;
     }
 
     // ----------------------------------------------------
-    // CURRENT COMPANY ID
+    // VEHICLE LOOKUP (TENANT SAFE)
     // ----------------------------------------------------
-    private Long getCurrentCompanyId() {
-
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        String username = authentication.getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return user.getCompany().getId();
-    }
-
     private Vehicle getVehicleForCurrentCompany(Long vehicleId, Long companyId) {
         return vehicleRepository.findByIdAndCompanyId(vehicleId, companyId)
                 .orElseThrow(() ->
@@ -60,7 +48,7 @@ public class MaintenanceService {
     // ----------------------------------------------------
     public Page<MaintenanceResponseDTO> getAllMaintenance(Pageable pageable) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         return maintenanceRepository
                 .findByVehicle_Company_Id(companyId, pageable)
@@ -72,13 +60,12 @@ public class MaintenanceService {
     // ----------------------------------------------------
     public MaintenanceResponseDTO getMaintenanceById(Long id) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         MaintenanceRecord record = maintenanceRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Maintenance record", "id", id));
 
-        // enforce tenant safety via vehicle
         if (!record.getVehicle().getCompany().getId().equals(companyId)) {
             throw new ResourceNotFoundException("Maintenance record", "id", id);
         }
@@ -91,7 +78,7 @@ public class MaintenanceService {
     // ----------------------------------------------------
     public Page<MaintenanceResponseDTO> getMaintenanceForVehicle(Long vehicleId, Pageable pageable) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         return maintenanceRepository
                 .findByVehicle_IdAndVehicle_Company_Id(vehicleId, companyId, pageable)
@@ -103,7 +90,7 @@ public class MaintenanceService {
     // ----------------------------------------------------
     public MaintenanceResponseDTO addMaintenance(MaintenanceRequestDTO request) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         Vehicle vehicle = getVehicleForCurrentCompany(request.getVehicleId(), companyId);
 
@@ -121,7 +108,7 @@ public class MaintenanceService {
     // ----------------------------------------------------
     public MaintenanceResponseDTO updateMaintenance(Long id, MaintenanceRequestDTO request) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         MaintenanceRecord existing = maintenanceRepository.findById(id)
                 .orElseThrow(() ->
@@ -148,7 +135,7 @@ public class MaintenanceService {
     // ----------------------------------------------------
     public void deleteMaintenance(Long id) {
 
-        Long companyId = getCurrentCompanyId();
+        Long companyId = currentUserService.getCompanyId();
 
         MaintenanceRecord record = maintenanceRepository.findById(id)
                 .orElseThrow(() ->
