@@ -3,6 +3,9 @@ package com.dylanclarke.FleetManagementAPI.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.dylanclarke.FleetManagementAPI.api.ApiResponse;
 import com.dylanclarke.FleetManagementAPI.dto.AuthRequest;
 import com.dylanclarke.FleetManagementAPI.dto.RegisterRequest;
@@ -18,6 +21,8 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class AuthenticationService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
 
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
@@ -56,6 +61,13 @@ public class AuthenticationService {
 
         userRepository.save(user);
 
+        log.info(
+                "User registered: userId={}, companyId={}, role={}",
+                user.getId(),
+                company.getId(),
+                user.getRole()
+        );
+
         return new ApiResponse<>(
                 true,
                 "User registered successfully",
@@ -66,13 +78,31 @@ public class AuthenticationService {
     public ApiResponse<String> login(AuthRequest request) {
 
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+                .orElseThrow(() -> {
+                    log.warn(
+                            "Login failed: unknown username={}",
+                            request.getUsername()
+                    );
+                    return new AuthenticationException("Invalid credentials");
+                });
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+
+            log.warn(
+                    "Login failed: invalid password userId={}",
+                    user.getId()
+            );
+
             throw new AuthenticationException("Invalid credentials");
         }
 
         String token = jwtService.generateToken(user);
+
+        log.info(
+                "Login successful: userId={}, companyId={}",
+                user.getId(),
+                user.getCompany().getId()
+        );
 
         return new ApiResponse<>(
                 true,

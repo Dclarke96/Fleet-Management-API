@@ -2,25 +2,26 @@ package com.dylanclarke.FleetManagementAPI.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
 import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
 import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
 import com.dylanclarke.FleetManagementAPI.model.MaintenanceRecord;
-import com.dylanclarke.FleetManagementAPI.model.User;
 import com.dylanclarke.FleetManagementAPI.model.Vehicle;
 import com.dylanclarke.FleetManagementAPI.repository.MaintenanceRepository;
-import com.dylanclarke.FleetManagementAPI.repository.UserRepository;
 import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
 import com.dylanclarke.FleetManagementAPI.security.CurrentUserService;
 
 @Service
 @SuppressWarnings("null")
 public class MaintenanceService {
+
+    private static final Logger log = LoggerFactory.getLogger(MaintenanceService.class);
 
     private final MaintenanceRepository maintenanceRepository;
     private final VehicleRepository vehicleRepository;
@@ -100,7 +101,16 @@ public class MaintenanceService {
 
         record.setVehicle(vehicle);
 
-        return mapToDTO(maintenanceRepository.save(record));
+        MaintenanceRecord saved = maintenanceRepository.save(record);
+
+        log.info(
+                "Maintenance created: maintenanceId={}, vehicleId={}, companyId={}",
+                saved.getId(),
+                vehicle.getId(),
+                companyId
+        );
+
+        return mapToDTO(saved);
     }
 
     // ----------------------------------------------------
@@ -127,7 +137,16 @@ public class MaintenanceService {
 
         validateRecord(existing, vehicle);
 
-        return mapToDTO(maintenanceRepository.save(existing));
+        MaintenanceRecord saved = maintenanceRepository.save(existing);
+
+        log.info(
+                "Maintenance updated: maintenanceId={}, vehicleId={}, companyId={}",
+                saved.getId(),
+                vehicle.getId(),
+                companyId
+        );
+
+        return mapToDTO(saved);
     }
 
     // ----------------------------------------------------
@@ -146,8 +165,14 @@ public class MaintenanceService {
         }
 
         maintenanceRepository.delete(record);
-    }
 
+        log.info(
+                "Maintenance deleted: maintenanceId={}, vehicleId={}, companyId={}",
+                record.getId(),
+                record.getVehicle().getId(),
+                companyId
+        );
+    }
     // ----------------------------------------------------
     // MAPPING
     // ----------------------------------------------------

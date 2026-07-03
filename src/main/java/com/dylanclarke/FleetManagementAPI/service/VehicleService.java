@@ -2,10 +2,10 @@ package com.dylanclarke.FleetManagementAPI.service;
 
 import java.time.LocalDate;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO;
@@ -13,15 +13,15 @@ import com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO;
 import com.dylanclarke.FleetManagementAPI.exception.ResourceNotFoundException;
 import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
 import com.dylanclarke.FleetManagementAPI.model.Company;
-import com.dylanclarke.FleetManagementAPI.model.User;
 import com.dylanclarke.FleetManagementAPI.model.Vehicle;
-import com.dylanclarke.FleetManagementAPI.repository.UserRepository;
 import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
 import com.dylanclarke.FleetManagementAPI.security.CurrentUserService;
 
 @Service
 @SuppressWarnings("null")
 public class VehicleService {
+
+    private static final Logger log = LoggerFactory.getLogger(VehicleService.class);
 
     private final VehicleRepository repository;
     private final CurrentUserService currentUserService;
@@ -78,7 +78,6 @@ public class VehicleService {
 
         Vehicle entity = toEntity(dto);
 
-        // IMPORTANT: enforce tenant ownership via relationship
         Company company = new Company();
         company.setId(companyId);
 
@@ -87,6 +86,12 @@ public class VehicleService {
         validateVehicle(entity);
 
         Vehicle saved = repository.save(entity);
+
+        log.info(
+                "Vehicle created: vehicleId={}, companyId={}",
+                saved.getId(),
+                companyId
+        );
 
         return toDto(saved);
     }
@@ -107,6 +112,12 @@ public class VehicleService {
 
         Vehicle saved = repository.save(existing);
 
+        log.info(
+                "Vehicle updated: vehicleId={}, companyId={}",
+                saved.getId(),
+                companyId
+        );
+
         return toDto(saved);
     }
 
@@ -121,6 +132,12 @@ public class VehicleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", id));
 
         repository.delete(vehicle);
+
+        log.info(
+                "Vehicle deleted: vehicleId={}, companyId={}",
+                id,
+                companyId
+        );
     }
 
     // ----------------------------------------
