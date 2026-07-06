@@ -96,8 +96,17 @@ public class MaintenanceController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMaintenance(@PathVariable Long id) {
-        maintenanceService.deleteMaintenance(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ApiResponse<String>> deleteVehicle(
+           @PathVariable Long id
+    ) {
+
+       service.deleteVehicle(id);
+
+       return ResponseEntity.ok(
+            ApiResponse.success(
+                    null,
+                    "Vehicle deleted successfully"
+            )
+        );
     }
 }
