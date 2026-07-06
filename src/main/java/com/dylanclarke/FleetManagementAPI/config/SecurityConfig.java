@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.dylanclarke.FleetManagementAPI.logging.RequestLoggingFilter;
 import com.dylanclarke.FleetManagementAPI.security.JwtAuthFilter;
 
 @Configuration
@@ -49,26 +50,10 @@ public class SecurityConfig {
     @Profile("!test")
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            JwtAuthFilter jwtAuthFilter) throws Exception {
+            JwtAuthFilter jwtAuthFilter,
+            RequestLoggingFilter requestLoggingFilter) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
-
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().authenticated())
-
-                .formLogin(form -> form.disable())
-
-                .httpBasic(httpBasic -> httpBasic.disable())
-
-                .addFilterBefore(
-                        jwtAuthFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
+        configureSecurity(http, jwtAuthFilter, requestLoggingFilter);
 
         return http.build();
     }
@@ -77,23 +62,50 @@ public class SecurityConfig {
     // TEST SECURITY
     // =========================
     @Bean
-     @Profile("test")
-        public SecurityFilterChain testSecurityFilterChain(
-                HttpSecurity http,
-              JwtAuthFilter jwtAuthFilter) throws Exception {
+    @Profile("test")
+    public SecurityFilterChain testSecurityFilterChain(
+            HttpSecurity http,
+            JwtAuthFilter jwtAuthFilter,
+            RequestLoggingFilter requestLoggingFilter) throws Exception {
+
+        configureSecurity(http, jwtAuthFilter, requestLoggingFilter);
+
+        return http.build();
+    }
+
+    // =========================
+    // SHARED SECURITY CONFIGURATION
+    // =========================
+    private void configureSecurity(
+            HttpSecurity http,
+            JwtAuthFilter jwtAuthFilter,
+            RequestLoggingFilter requestLoggingFilter) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
+
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated())
-                .formLogin(form -> form.disable())
-                .httpBasic(httpBasic -> httpBasic.disable())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
+                .formLogin(form -> form.disable())
+
+                .httpBasic(httpBasic -> httpBasic.disable())
+
+                // Log every request before authentication
+                .addFilterBefore(
+                        requestLoggingFilter,
+                        JwtAuthFilter.class
+                )
+
+                // Authenticate JWT before Spring Security username/password auth
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
     }
 
     // =========================
