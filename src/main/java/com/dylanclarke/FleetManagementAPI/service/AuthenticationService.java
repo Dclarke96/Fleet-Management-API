@@ -1,10 +1,9 @@
 package com.dylanclarke.FleetManagementAPI.service;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import com.dylanclarke.FleetManagementAPI.api.ApiResponse;
 import com.dylanclarke.FleetManagementAPI.dto.AuthRequest;
@@ -41,10 +40,8 @@ public class AuthenticationService {
     public ApiResponse<String> register(RegisterRequest request) {
 
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            return new ApiResponse<>(
-                    false,
-                    null,
-                    "Username already exists"
+            return ApiResponse.failure(
+                "Username already exists"
             );
         }
 
@@ -68,10 +65,9 @@ public class AuthenticationService {
                 user.getRole()
         );
 
-        return new ApiResponse<>(
-                true,
-                "User registered successfully",
-                null
+        return ApiResponse.success(
+                null,
+                "User registered successfully"
         );
     }
 
@@ -104,8 +100,7 @@ public class AuthenticationService {
                 user.getCompany().getId()
         );
 
-        return new ApiResponse<>(
-                true,
+        return ApiResponse.success(
                 token,
                 "Login successful"
         );

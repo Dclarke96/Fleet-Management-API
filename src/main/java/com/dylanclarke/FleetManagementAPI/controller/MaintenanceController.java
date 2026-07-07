@@ -19,6 +19,7 @@ import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
 import com.dylanclarke.FleetManagementAPI.service.MaintenanceService;
 
+
 import jakarta.validation.Valid;
 
 @RestController
@@ -38,7 +39,7 @@ public class MaintenanceController {
         PageResponse<MaintenanceResponseDTO> pageResponse = new PageResponse<>(page);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, pageResponse, "Maintenance retrieved successfully")
+                ApiResponse.success(pageResponse, "Maintenance retrieved successfully")
         );
     }
 
@@ -48,7 +49,7 @@ public class MaintenanceController {
         MaintenanceResponseDTO response = maintenanceService.getMaintenanceById(id);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, response, "Maintenance retrieved successfully")
+                ApiResponse.success(response, "Maintenance retrieved successfully")
         );
     }
 
@@ -65,11 +66,7 @@ public class MaintenanceController {
                 new PageResponse<>(page);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        pageResponse,
-                        "Maintenance retrieved successfully"
-                )
+                ApiResponse.success(pageResponse, "Maintenance retrieved successfully")
         );
     }
 
@@ -80,7 +77,7 @@ public class MaintenanceController {
         MaintenanceResponseDTO response = maintenanceService.addMaintenance(requestDTO);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(true, response, "Maintenance created successfully"));
+                .body(ApiResponse.success(response, "Maintenance created successfully"));
     }
 
     @PutMapping("/{id}")
@@ -91,21 +88,21 @@ public class MaintenanceController {
         MaintenanceResponseDTO response = maintenanceService.updateMaintenance(id, requestDTO);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, response, "Maintenance updated successfully")
+                ApiResponse.success(response, "Maintenance updated successfully")
         );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> deleteVehicle(
+    public ResponseEntity<ApiResponse<String>> deleteMaintenance(
            @PathVariable Long id
     ) {
 
-       service.deleteVehicle(id);
+       maintenanceService.deleteMaintenance(id);
 
        return ResponseEntity.ok(
             ApiResponse.success(
                     null,
-                    "Vehicle deleted successfully"
+                    "Maintenance deleted successfully"
             )
         );
     }
