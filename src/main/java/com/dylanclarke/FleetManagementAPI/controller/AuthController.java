@@ -34,7 +34,9 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity
+        .status(HttpStatus.CREATED)
+        .body(response);
     }
 
     @PostMapping("/login")
@@ -47,6 +49,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity
+        .status(HttpStatus.CREATED)
+        .body(response);
     }
 }

@@ -98,7 +98,7 @@ public class SecurityConfig {
                 // Log every request before authentication
                 .addFilterBefore(
                         requestLoggingFilter,
-                        JwtAuthFilter.class
+                        UsernamePasswordAuthenticationFilter.class
                 )
 
                 // Authenticate JWT before Spring Security username/password auth
