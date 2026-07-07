@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -26,6 +27,7 @@ public class VehicleRequestDTO {
     @NotNull(message = "Year cannot be null")
     @JsonProperty("vehicleYear")
     @JsonAlias("vehicleYear")
+    @Min(value = 1900, message = "Year must be after 1900")
     private Integer year;
 
     @NotBlank(message = "Location cannot be blank")

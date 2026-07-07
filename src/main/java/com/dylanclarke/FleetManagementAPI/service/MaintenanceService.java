@@ -4,6 +4,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +20,6 @@ import com.dylanclarke.FleetManagementAPI.repository.VehicleRepository;
 import com.dylanclarke.FleetManagementAPI.security.CurrentUserService;
 
 @Service
-@SuppressWarnings("null")
 public class MaintenanceService {
 
     private static final Logger log = LoggerFactory.getLogger(MaintenanceService.class);
@@ -27,22 +28,34 @@ public class MaintenanceService {
     private final VehicleRepository vehicleRepository;
     private final CurrentUserService currentUserService;
 
-    public MaintenanceService(MaintenanceRepository maintenanceRepository,
-                              VehicleRepository vehicleRepository,
-                              CurrentUserService currentUserService) {
+    public MaintenanceService(
+            MaintenanceRepository maintenanceRepository,
+            VehicleRepository vehicleRepository,
+            CurrentUserService currentUserService
+    ) {
         this.maintenanceRepository = maintenanceRepository;
         this.vehicleRepository = vehicleRepository;
         this.currentUserService = currentUserService;
     }
 
+
     // ----------------------------------------------------
     // VEHICLE LOOKUP (TENANT SAFE)
     // ----------------------------------------------------
-    private Vehicle getVehicleForCurrentCompany(Long vehicleId, Long companyId) {
+    private Vehicle getVehicleForCurrentCompany(
+            Long vehicleId,
+            Long companyId
+    ) {
+
         return vehicleRepository.findByIdAndCompanyId(vehicleId, companyId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Vehicle", "id", vehicleId));
+                        new ResourceNotFoundException(
+                                "Vehicle",
+                                "id",
+                                vehicleId
+                        ));
     }
+
 
     // ----------------------------------------------------
     // GET ALL (TENANT SAFE VIA VEHICLE FILTER)
@@ -56,6 +69,7 @@ public class MaintenanceService {
                 .map(this::mapToDTO);
     }
 
+
     // ----------------------------------------------------
     // GET BY ID (TENANT SAFE)
     // ----------------------------------------------------
@@ -65,35 +79,62 @@ public class MaintenanceService {
 
         MaintenanceRecord record = maintenanceRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Maintenance record", "id", id));
+                        new ResourceNotFoundException(
+                                "Maintenance record",
+                                "id",
+                                id
+                        ));
 
-        if (!record.getVehicle().getCompany().getId().equals(companyId)) {
-            throw new ResourceNotFoundException("Maintenance record", "id", id);
+        if (!record.getVehicle()
+                .getCompany()
+                .getId()
+                .equals(companyId)) {
+
+            throw new ResourceNotFoundException(
+                    "Maintenance record",
+                    "id",
+                    id
+            );
         }
 
         return mapToDTO(record);
     }
 
+
     // ----------------------------------------------------
     // GET BY VEHICLE (TENANT SAFE)
     // ----------------------------------------------------
-    public Page<MaintenanceResponseDTO> getMaintenanceForVehicle(Long vehicleId, Pageable pageable) {
+    public Page<MaintenanceResponseDTO> getMaintenanceForVehicle(
+            Long vehicleId,
+            Pageable pageable
+    ) {
 
         Long companyId = currentUserService.getCompanyId();
 
         return maintenanceRepository
-                .findByVehicle_IdAndVehicle_Company_Id(vehicleId, companyId, pageable)
+                .findByVehicle_IdAndVehicle_Company_Id(
+                        vehicleId,
+                        companyId,
+                        pageable
+                )
                 .map(this::mapToDTO);
     }
+
 
     // ----------------------------------------------------
     // CREATE
     // ----------------------------------------------------
-    public MaintenanceResponseDTO addMaintenance(MaintenanceRequestDTO request) {
+    public MaintenanceResponseDTO addMaintenance(
+            MaintenanceRequestDTO request
+    ) {
 
         Long companyId = currentUserService.getCompanyId();
 
-        Vehicle vehicle = getVehicleForCurrentCompany(request.getVehicleId(), companyId);
+        Vehicle vehicle =
+                getVehicleForCurrentCompany(
+                        request.getVehicleId(),
+                        companyId
+                );
 
         MaintenanceRecord record = mapToEntity(request);
 
@@ -101,7 +142,8 @@ public class MaintenanceService {
 
         record.setVehicle(vehicle);
 
-        MaintenanceRecord saved = maintenanceRepository.save(record);
+        MaintenanceRecord saved =
+                maintenanceRepository.save(record);
 
         log.info(
                 "Maintenance created: maintenanceId={}, vehicleId={}, companyId={}",
@@ -113,22 +155,46 @@ public class MaintenanceService {
         return mapToDTO(saved);
     }
 
+
     // ----------------------------------------------------
     // UPDATE
     // ----------------------------------------------------
-    public MaintenanceResponseDTO updateMaintenance(Long id, MaintenanceRequestDTO request) {
+    public MaintenanceResponseDTO updateMaintenance(
+            Long id,
+            MaintenanceRequestDTO request
+    ) {
 
         Long companyId = currentUserService.getCompanyId();
 
-        MaintenanceRecord existing = maintenanceRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Maintenance record", "id", id));
+        MaintenanceRecord existing =
+                maintenanceRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Maintenance record",
+                                        "id",
+                                        id
+                                ));
 
-        if (!existing.getVehicle().getCompany().getId().equals(companyId)) {
-            throw new ResourceNotFoundException("Maintenance record", "id", id);
+
+        if (!existing.getVehicle()
+                .getCompany()
+                .getId()
+                .equals(companyId)) {
+
+            throw new ResourceNotFoundException(
+                    "Maintenance record",
+                    "id",
+                    id
+            );
         }
 
-        Vehicle vehicle = getVehicleForCurrentCompany(request.getVehicleId(), companyId);
+
+        Vehicle vehicle =
+                getVehicleForCurrentCompany(
+                        request.getVehicleId(),
+                        companyId
+                );
+
 
         existing.setDescription(request.getDescription());
         existing.setServiceDate(request.getDate());
@@ -137,7 +203,10 @@ public class MaintenanceService {
 
         validateRecord(existing, vehicle);
 
-        MaintenanceRecord saved = maintenanceRepository.save(existing);
+
+        MaintenanceRecord saved =
+                maintenanceRepository.save(existing);
+
 
         log.info(
                 "Maintenance updated: maintenanceId={}, vehicleId={}, companyId={}",
@@ -146,8 +215,10 @@ public class MaintenanceService {
                 companyId
         );
 
+
         return mapToDTO(saved);
     }
+
 
     // ----------------------------------------------------
     // DELETE
@@ -156,15 +227,32 @@ public class MaintenanceService {
 
         Long companyId = currentUserService.getCompanyId();
 
-        MaintenanceRecord record = maintenanceRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Maintenance record", "id", id));
 
-        if (!record.getVehicle().getCompany().getId().equals(companyId)) {
-            throw new ResourceNotFoundException("Maintenance record", "id", id);
+        MaintenanceRecord record =
+                maintenanceRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Maintenance record",
+                                        "id",
+                                        id
+                                ));
+
+
+        if (!record.getVehicle()
+                .getCompany()
+                .getId()
+                .equals(companyId)) {
+
+            throw new ResourceNotFoundException(
+                    "Maintenance record",
+                    "id",
+                    id
+            );
         }
 
+
         maintenanceRepository.delete(record);
+
 
         log.info(
                 "Maintenance deleted: maintenanceId={}, vehicleId={}, companyId={}",
@@ -173,12 +261,17 @@ public class MaintenanceService {
                 companyId
         );
     }
+
+
     // ----------------------------------------------------
     // MAPPING
     // ----------------------------------------------------
-    private MaintenanceResponseDTO mapToDTO(MaintenanceRecord record) {
+    private MaintenanceResponseDTO mapToDTO(
+            MaintenanceRecord record
+    ) {
 
-        MaintenanceResponseDTO dto = new MaintenanceResponseDTO();
+        MaintenanceResponseDTO dto =
+                new MaintenanceResponseDTO();
 
         dto.setId(record.getId());
         dto.setVehicleId(record.getVehicle().getId());
@@ -189,9 +282,13 @@ public class MaintenanceService {
         return dto;
     }
 
-    private MaintenanceRecord mapToEntity(MaintenanceRequestDTO request) {
 
-        MaintenanceRecord record = new MaintenanceRecord();
+    private MaintenanceRecord mapToEntity(
+            MaintenanceRequestDTO request
+    ) {
+
+        MaintenanceRecord record =
+                new MaintenanceRecord();
 
         record.setDescription(request.getDescription());
         record.setServiceDate(request.getDate());
@@ -200,26 +297,36 @@ public class MaintenanceService {
         return record;
     }
 
+
     // ----------------------------------------------------
-    // VALIDATION
+    // BUSINESS VALIDATION
     // ----------------------------------------------------
-    private void validateRecord(MaintenanceRecord record, Vehicle vehicle) {
+    private void validateRecord(
+            MaintenanceRecord record,
+            Vehicle vehicle
+    ) {
 
-        if (record.getDescription() == null || record.getDescription().trim().length() < 3) {
-            throw new ValidationException("Description must be at least 3 characters");
+        LocalDate serviceDate = record.getServiceDate();
+
+
+        if (serviceDate.isBefore(vehicle.getStartDate())) {
+
+            throw new ValidationException(
+                    "Maintenance date cannot occur before vehicle start date",
+                    "date",
+                    serviceDate
+            );
         }
 
-        if (record.getServiceDate() == null) {
-            throw new ValidationException("Service date cannot be null");
-        }
-
-        if (record.getServiceDate().isBefore(vehicle.getStartDate())) {
-            throw new ValidationException("Invalid service date");
-        }
 
         if (vehicle.getEndDate() != null &&
-                record.getServiceDate().isAfter(vehicle.getEndDate())) {
-            throw new ValidationException("Invalid service date");
+                serviceDate.isAfter(vehicle.getEndDate())) {
+
+            throw new ValidationException(
+                    "Maintenance date cannot occur after vehicle end date",
+                    "date",
+                    serviceDate
+            );
         }
     }
 }

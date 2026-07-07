@@ -46,11 +46,11 @@ public class AuthController {
         ApiResponse<String> response = authenticationService.login(request);
 
         if (!response.isSuccess()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(response);
         }
 
-        return ResponseEntity
-        .status(HttpStatus.CREATED)
-        .body(response);
+        return ResponseEntity.ok(response);
     }
 }

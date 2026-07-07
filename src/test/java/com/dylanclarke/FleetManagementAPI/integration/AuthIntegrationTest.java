@@ -92,7 +92,7 @@ class AuthIntegrationTest {
 
         registerRaw("user1")
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         Assertions.assertTrue(
                 userRepository.findAll()
@@ -106,7 +106,7 @@ class AuthIntegrationTest {
     void shouldRejectDuplicateUsername() throws Exception {
 
         registerRaw("duplicate")
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         String json = """
         {
@@ -131,7 +131,7 @@ class AuthIntegrationTest {
     void shouldLoginSuccessfully() throws Exception {
 
         registerRaw("loginuser")
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         String token = loginAndGetToken("loginuser");
 
@@ -144,7 +144,7 @@ class AuthIntegrationTest {
     void shouldRejectInvalidPassword() throws Exception {
 
         registerRaw("badpass")
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         String json = """
         {
@@ -185,7 +185,7 @@ class AuthIntegrationTest {
     void shouldAllowAuthenticatedRequest() throws Exception {
 
         registerRaw("authuser")
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         String token = loginAndGetToken("authuser");
 
