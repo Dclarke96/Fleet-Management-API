@@ -1,7 +1,5 @@
 package com.dylanclarke.FleetManagementAPI.integration;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,13 +8,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -29,6 +30,7 @@ class VehicleAuthorizationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
 
     // =========================================================
     // AUTH HELPERS
@@ -109,6 +111,31 @@ class VehicleAuthorizationTest {
     }
 
 
+    private void updateVehicle(String token, Long vehicleId) throws Exception {
+
+        String json = """
+        {
+          "title":"Updated Vehicle",
+          "vin":"UPDATEDVIN",
+          "licensePlate":"UPDATED",
+          "make":"Toyota",
+          "model":"Tacoma",
+          "vehicleYear":2025,
+          "location":"Updated Yard",
+          "maintenanceAlertsEnabled":false,
+          "startDate":"2026-01-01",
+          "endDate":"2026-12-31"
+        }
+        """;
+
+        mockMvc.perform(put("/api/vehicles/" + vehicleId)
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                .andExpect(status().isOk());
+    }
+
+
     // =========================================================
     // AUTHORIZATION TESTS
     // =========================================================
@@ -117,7 +144,6 @@ class VehicleAuthorizationTest {
     @DisplayName("Should return only vehicles belonging to authenticated user's company")
     void shouldReturnOnlyUsersCompanyVehicles() throws Exception {
 
-        // Arrange
         register("alice", "Company A");
         register("bob", "Company B");
 
@@ -128,7 +154,6 @@ class VehicleAuthorizationTest {
         createVehicle(bobToken, "Bob Van");
 
 
-        // Act + Assert
         mockMvc.perform(get("/api/vehicles")
                 .header("Authorization", "Bearer " + aliceToken))
                 .andExpect(status().isOk())
@@ -144,7 +169,6 @@ class VehicleAuthorizationTest {
     @DisplayName("Should not return vehicle belonging to another company")
     void shouldNotReturnVehicleFromAnotherCompany() throws Exception {
 
-        // Arrange
         register("alice", "Company A");
         register("bob", "Company B");
 
@@ -156,9 +180,45 @@ class VehicleAuthorizationTest {
         Long bobVehicleId = createVehicle(bobToken, "Bob Van");
 
 
-        // Act + Assert
         mockMvc.perform(get("/api/vehicles/" + bobVehicleId)
                 .header("Authorization", "Bearer " + aliceToken))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    @DisplayName("Should not update vehicle belonging to another company")
+    void shouldNotUpdateVehicleFromAnotherCompany() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+        register("bob", "Company B");
+
+        String aliceToken = login("alice");
+        String bobToken = login("bob");
+
+        Long bobVehicleId = createVehicle(bobToken, "Bob Van");
+
+
+        // Act + Assert
+        mockMvc.perform(put("/api/vehicles/" + bobVehicleId)
+                .header("Authorization", "Bearer " + aliceToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                {
+                  "title":"Unauthorized Update",
+                  "vin":"BADVIN",
+                  "licensePlate":"BAD123",
+                  "make":"Tesla",
+                  "model":"Cybertruck",
+                  "vehicleYear":2026,
+                  "location":"Hack Attempt",
+                  "maintenanceAlertsEnabled":true,
+                  "startDate":"2026-01-01",
+                  "endDate":"2026-12-31"
+                }
+                """))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
