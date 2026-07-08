@@ -10,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -270,5 +272,69 @@ class MaintenanceAuthorizationTest {
                         java.time.LocalDate.now().plusDays(1)
                 )))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should not delete maintenance belonging to another company")
+    void shouldNotDeleteMaintenanceFromAnotherCompany() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+        register("bob", "Company B");
+
+        String aliceToken = login("alice");
+        String bobToken = login("bob");
+
+        Long bobVehicle = createVehicle(bobToken, "Bob Van");
+
+        Long bobMaintenance =
+                createMaintenance(
+                        bobToken,
+                        bobVehicle,
+                        "Bob Tire Rotation");
+
+        // Act + Assert
+        mockMvc.perform(delete("/api/maintenance/" + bobMaintenance)
+                .header("Authorization", "Bearer " + aliceToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should reject unauthenticated maintenance access")
+    void shouldRejectUnauthenticatedMaintenanceAccess() throws Exception {
+
+        // Act + Assert
+        mockMvc.perform(get("/api/maintenance"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Should not return maintenance for another company's vehicle")
+    void shouldNotReturnMaintenanceForAnotherCompanyVehicle() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+        register("bob", "Company B");
+
+        String aliceToken = login("alice");
+        String bobToken = login("bob");
+
+        Long bobVehicle =
+                createVehicle(
+                        bobToken,
+                        "Bob Van");
+
+        createMaintenance(
+                bobToken,
+                bobVehicle,
+                "Bob Tire Rotation");
+
+
+        // Act + Assert
+        mockMvc.perform(get("/api/maintenance/vehicle/" + bobVehicle)
+                .header("Authorization", "Bearer " + aliceToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(0));
     }
 }
