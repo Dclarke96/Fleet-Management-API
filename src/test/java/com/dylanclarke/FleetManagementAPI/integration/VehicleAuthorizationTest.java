@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -50,6 +50,7 @@ class VehicleAuthorizationTest {
                 .andExpect(status().isCreated());
     }
 
+
     private String login(String username) throws Exception {
 
         String json = """
@@ -72,7 +73,8 @@ class VehicleAuthorizationTest {
         return node.get("data").asText();
     }
 
-    private void createVehicle(String token, String title) throws Exception {
+
+    private Long createVehicle(String token, String title) throws Exception {
 
         String json = """
         {
@@ -89,12 +91,23 @@ class VehicleAuthorizationTest {
         }
         """.formatted(title);
 
-        mockMvc.perform(post("/api/vehicles")
+        String response = mockMvc.perform(post("/api/vehicles")
                 .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+
+        JsonNode node = objectMapper.readTree(response);
+
+        return node.get("data")
+                .get("id")
+                .asLong();
     }
+
 
     // =========================================================
     // AUTHORIZATION TESTS
@@ -114,14 +127,39 @@ class VehicleAuthorizationTest {
         createVehicle(aliceToken, "Alice Truck");
         createVehicle(bobToken, "Bob Van");
 
-        // Act
-       mockMvc.perform(get("/api/vehicles")
-        .header("Authorization", "Bearer " + aliceToken))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.success").value(true))
-        .andExpect(jsonPath("$.data.totalElements").value(1))
-        .andExpect(jsonPath("$.data.content.length()").value(1))
-        .andExpect(jsonPath("$.data.content[0].title").value("Alice Truck"))
-        .andExpect(jsonPath("$.data.content[0].make").value("Ford"));
+
+        // Act + Assert
+        mockMvc.perform(get("/api/vehicles")
+                .header("Authorization", "Bearer " + aliceToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content.length()").value(1))
+                .andExpect(jsonPath("$.data.content[0].title").value("Alice Truck"))
+                .andExpect(jsonPath("$.data.content[0].make").value("Ford"));
+    }
+
+
+    @Test
+    @DisplayName("Should not return vehicle belonging to another company")
+    void shouldNotReturnVehicleFromAnotherCompany() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+        register("bob", "Company B");
+
+        String aliceToken = login("alice");
+        String bobToken = login("bob");
+
+        createVehicle(aliceToken, "Alice Truck");
+
+        Long bobVehicleId = createVehicle(bobToken, "Bob Van");
+
+
+        // Act + Assert
+        mockMvc.perform(get("/api/vehicles/" + bobVehicleId)
+                .header("Authorization", "Bearer " + aliceToken))
+                .andDo(print())
+                .andExpect(status().isNotFound());
     }
 }
