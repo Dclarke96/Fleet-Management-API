@@ -245,4 +245,36 @@ class VehicleAuthorizationTest {
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    @DisplayName("Should create vehicle belonging to authenticated user's company")
+    void shouldCreateVehicleForAuthenticatedUsersCompany() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+        register("bob", "Company B");
+
+        String aliceToken = login("alice");
+        String bobToken = login("bob");
+
+
+        // Act
+        createVehicle(aliceToken, "Alice Truck");
+
+
+        // Assert - Alice should see her vehicle
+        mockMvc.perform(get("/api/vehicles")
+                .header("Authorization", "Bearer " + aliceToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].title").value("Alice Truck"));
+
+
+        // Assert - Bob should not see Alice's vehicle
+        mockMvc.perform(get("/api/vehicles")
+                .header("Authorization", "Bearer " + bobToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+    }
 }
