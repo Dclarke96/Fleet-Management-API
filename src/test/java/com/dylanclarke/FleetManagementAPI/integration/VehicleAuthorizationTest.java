@@ -277,4 +277,14 @@ class VehicleAuthorizationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(0));
     }
+
+    @Test
+    @DisplayName("Should reject unauthenticated vehicle access")
+    void shouldRejectUnauthenticatedVehicleAccess() throws Exception {
+
+        // Act + Assert
+        mockMvc.perform(get("/api/vehicles"))
+                .andDo(print())
+                .andExpect(status().isUnauthorized());
+    }
 }
