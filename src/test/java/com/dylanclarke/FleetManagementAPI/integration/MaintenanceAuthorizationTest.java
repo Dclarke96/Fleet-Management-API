@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.transaction.annotation.Transactional;
@@ -176,5 +177,98 @@ class MaintenanceAuthorizationTest {
                 .andExpect(jsonPath("$.data.content.length()").value(1))
                 .andExpect(jsonPath("$.data.content[0].description")
                         .value("Alice Oil Change"));
+    }
+
+    @Test
+    @DisplayName("Should not return maintenance belonging to another company")
+    void shouldNotReturnMaintenanceFromAnotherCompany() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+        register("bob", "Company B");
+
+        String aliceToken = login("alice");
+        String bobToken = login("bob");
+
+        Long bobVehicle = createVehicle(bobToken, "Bob Van");
+
+        Long bobMaintenance =
+                createMaintenance(
+                        bobToken,
+                        bobVehicle,
+                        "Bob Tire Rotation");
+
+        // Act + Assert
+        mockMvc.perform(get("/api/maintenance/" + bobMaintenance)
+                .header("Authorization", "Bearer " + aliceToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should not create maintenance for another company's vehicle")
+    void shouldNotCreateMaintenanceForAnotherCompaniesVehicle() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+        register("bob", "Company B");
+
+        String aliceToken = login("alice");
+        String bobToken = login("bob");
+
+        Long bobVehicle = createVehicle(bobToken, "Bob Van");
+
+        // Act + Assert
+        mockMvc.perform(post("/api/maintenance")
+                .header("Authorization", "Bearer " + aliceToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                {
+                "vehicleId": %d,
+                "description": "Unauthorized Maintenance",
+                "date": "%s",
+                "cost": 99.99
+                }
+                """.formatted(
+                        bobVehicle,
+                        java.time.LocalDate.now().plusDays(1)
+                )))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should not update maintenance belonging to another company")
+    void shouldNotUpdateMaintenanceFromAnotherCompany() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+        register("bob", "Company B");
+
+        String aliceToken = login("alice");
+        String bobToken = login("bob");
+
+        Long bobVehicle = createVehicle(bobToken, "Bob Van");
+
+        Long bobMaintenance =
+                createMaintenance(
+                        bobToken,
+                        bobVehicle,
+                        "Bob Tire Rotation");
+
+        // Act + Assert
+        mockMvc.perform(put("/api/maintenance/" + bobMaintenance)
+                .header("Authorization", "Bearer " + aliceToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                {
+                "vehicleId": %d,
+                "description": "Unauthorized Update",
+                "date": "%s",
+                "cost": 500.00
+                }
+                """.formatted(
+                        bobVehicle,
+                        java.time.LocalDate.now().plusDays(1)
+                )))
+                .andExpect(status().isNotFound());
     }
 }
