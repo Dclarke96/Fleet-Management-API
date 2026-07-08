@@ -8,6 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -219,6 +221,27 @@ class VehicleAuthorizationTest {
                   "endDate":"2026-12-31"
                 }
                 """))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should not delete vehicle belonging to another company")
+    void shouldNotDeleteVehicleFromAnotherCompany() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+        register("bob", "Company B");
+
+        String aliceToken = login("alice");
+        String bobToken = login("bob");
+
+        Long bobVehicleId = createVehicle(bobToken, "Bob Van");
+
+
+        // Act + Assert
+        mockMvc.perform(delete("/api/vehicles/" + bobVehicleId)
+                .header("Authorization", "Bearer " + aliceToken))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
