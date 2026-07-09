@@ -114,6 +114,43 @@ public class DataIntegrityIntegrationTest {
                 .asLong();
     }
 
+    private Long createVehicle(String token,String title, LocalDate startDate, LocalDate endDate) throws Exception {
+
+        String json = """
+        {
+        "title":"%s",
+        "vin":"VIN123",
+        "licensePlate":"ABC123",
+        "make":"Ford",
+        "model":"F150",
+        "vehicleYear":2024,
+        "location":"Yard",
+        "maintenanceAlertsEnabled":true,
+        "startDate":"%s",
+        "endDate":"%s"
+        }
+        """.formatted(
+                title,
+                startDate,
+                endDate
+        );
+
+        String response = mockMvc.perform(post("/api/vehicles")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode node = objectMapper.readTree(response);
+
+        return node.get("data")
+                .get("id")
+                .asLong();
+    }
+
     // =========================================================
     // DATA INTEGRITY TESTS
     // =========================================================
@@ -178,5 +215,150 @@ public class DataIntegrityIntegrationTest {
                 .andExpect(jsonPath("$.error").value("Invalid Request"))
                 .andExpect(jsonPath("$.message").value("Request validation failed"))
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("cost"));
+    }
+
+    @Test
+    @DisplayName("Should reject maintenance without description")
+    void shouldRejectMaintenanceWithoutDescription() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+
+        String token = login("alice");
+
+        Long vehicleId = createVehicle(
+                token,
+                "Company Truck");
+
+        LocalDate serviceDate = LocalDate.now().plusDays(1);
+
+        // Act + Assert
+        mockMvc.perform(post("/api/maintenance")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                {
+                "vehicleId": %d,
+                "description": "",
+                "date": "%s",
+                "cost": 100.00
+                }
+                """.formatted(vehicleId, serviceDate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Invalid Request"))
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("description"));
+    }
+
+    @Test
+    @DisplayName("Should reject maintenance without vehicle ID")
+    void shouldRejectMaintenanceWithoutVehicleId() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+
+        String token = login("alice");
+
+        LocalDate serviceDate = LocalDate.now().plusDays(1);
+
+        // Act + Assert
+        mockMvc.perform(post("/api/maintenance")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                {
+                "description": "Oil Change",
+                "date": "%s",
+                "cost": 100.00
+                }
+                """.formatted(serviceDate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Invalid Request"))
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("vehicleId"));
+    }
+
+    @Test
+    @DisplayName("Should reject maintenance after vehicle end date")
+    void shouldRejectMaintenanceAfterVehicleEndDate() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+
+        String token = login("alice");
+
+        LocalDate startDate = LocalDate.now();
+        LocalDate endDate = LocalDate.now().plusDays(5);
+
+        Long vehicleId = createVehicle(
+                token,
+                "Company Truck",
+                startDate,
+                endDate);
+
+        LocalDate invalidMaintenanceDate = endDate.plusDays(1);
+
+        // Act + Assert
+        mockMvc.perform(post("/api/maintenance")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                {
+                "vehicleId": %d,
+                "description": "Oil Change",
+                "date": "%s",
+                "cost": 100.00
+                }
+                """.formatted(
+                        vehicleId,
+                        invalidMaintenanceDate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Validation Failed"))
+                .andExpect(jsonPath("$.message")
+                        .value("Maintenance date cannot occur after vehicle end date"));
+    }
+
+    @Test
+    @DisplayName("Should reject maintenance before vehicle start date")
+    void shouldRejectMaintenanceBeforeVehicleStartDate() throws Exception {
+
+        // Arrange
+        register("alice", "Company A");
+
+        String token = login("alice");
+
+        LocalDate startDate = LocalDate.now().plusDays(10);
+        LocalDate endDate = startDate.plusYears(1);
+
+        Long vehicleId = createVehicle(
+                token,
+                "Company Truck",
+                startDate,
+                endDate);
+
+        LocalDate invalidMaintenanceDate = startDate.minusDays(1);
+
+        // Act + Assert
+        mockMvc.perform(post("/api/maintenance")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                {
+                  "vehicleId": %d,
+                  "description": "Oil Change",
+                  "date": "%s",
+                  "cost": 100.00
+                }
+                """.formatted(
+                        vehicleId,
+                        invalidMaintenanceDate)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Validation Failed"))
+                .andExpect(jsonPath("$.message")
+                        .value("Maintenance date cannot occur before vehicle start date"));
     }
 }
