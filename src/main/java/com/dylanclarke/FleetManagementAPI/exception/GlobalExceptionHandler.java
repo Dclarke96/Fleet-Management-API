@@ -1,9 +1,14 @@
 package com.dylanclarke.FleetManagementAPI.exception;
 
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,8 +17,6 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import com.dylanclarke.FleetManagementAPI.dto.ErrorResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Global exception handler for the Fleet Management API.
@@ -109,6 +112,37 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    /**
+    * Handle database constraint violations
+    */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+            DataIntegrityViolationException ex,
+            HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+
+        logger.warn(
+                "DATA_INTEGRITY_VIOLATION traceId={} uri={} message={}",
+                traceId,
+                request.getRequestURI(),
+                ex.getMostSpecificCause().getMessage()
+        );
+
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Data Conflict",
+                "The request conflicts with existing data",
+                request.getRequestURI(),
+                traceId
+        );
+
+        return new ResponseEntity<>(
+                response,
+                HttpStatus.CONFLICT
+        );
     }
 
     /**
@@ -223,14 +257,13 @@ public class GlobalExceptionHandler {
         logger.warn(
                 "AUTH_FAILED traceId={} uri={} message={}",
                 traceId,
-                request.getRequestURI(),
-                ex.getMessage()
+                request.getRequestURI()
         );
 
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),
                 "Unauthorized",
-                ex.getMessage(),
+                "Invalid authentication credentials",
                 request.getRequestURI(),
                 traceId
         );
@@ -265,5 +298,37 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+    * Handle AccessDeniedException
+    *
+    * User is authenticated but does not have permission.
+    */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            AccessDeniedException ex,
+            HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+
+        logger.warn(
+                "ACCESS_DENIED traceId={} uri={}",
+                traceId,
+                request.getRequestURI()
+        );
+
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                "You do not have permission to access this resource",
+                request.getRequestURI(),
+                traceId
+        );
+
+        return new ResponseEntity<>(
+                response,
+                HttpStatus.FORBIDDEN
+        );
     }
 }
