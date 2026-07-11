@@ -19,8 +19,8 @@ public interface MaintenanceRepository extends JpaRepository<MaintenanceRecord, 
     // NEW: tenant-safe query (THIS IS THE IMPORTANT ONE)
     Page<MaintenanceRecord> findByVehicle_Company_Id(Long companyId, Pageable pageable);
 
-    
-
     Page<MaintenanceRecord> findByVehicle_IdAndVehicle_Company_Id(Long vehicleId, Long companyId, Pageable pageable);
+
+    Optional<MaintenanceRecord> findByIdAndVehicle_Company_Id(Long id, Long companyId);
 
 }

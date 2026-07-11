@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.dylanclarke.FleetManagementAPI.dto.VehicleRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.VehicleResponseDTO;
@@ -36,6 +37,7 @@ public class VehicleService {
     // ----------------------------------------
     // GET ALL (PAGINATED)
     // ----------------------------------------
+    @Transactional(readOnly = true)
     public Page<VehicleResponseDTO> getAllVehicles(Pageable pageable) {
 
         Long companyId = currentUserService.getCompanyId();
@@ -48,6 +50,7 @@ public class VehicleService {
     // ----------------------------------------
     // GET BY ID
     // ----------------------------------------
+    @Transactional(readOnly = true)
     public VehicleResponseDTO getVehicleById(Long id) {
 
         Long companyId = currentUserService.getCompanyId();
@@ -63,6 +66,7 @@ public class VehicleService {
     // ----------------------------------------
     // SEARCH (PAGINATED)
     // ----------------------------------------
+    @Transactional(readOnly = true)
     public Page<VehicleResponseDTO> searchVehicles(
             String query,
             Pageable pageable
@@ -78,6 +82,7 @@ public class VehicleService {
     // ----------------------------------------
     // CREATE
     // ----------------------------------------
+    @Transactional
     public VehicleResponseDTO addVehicle(VehicleRequestDTO dto) {
 
         Long companyId = currentUserService.getCompanyId();
@@ -106,6 +111,7 @@ public class VehicleService {
     // ----------------------------------------
     // UPDATE
     // ----------------------------------------
+    @Transactional
     public VehicleResponseDTO updateVehicle(
             Long id,
             VehicleRequestDTO dto
@@ -136,6 +142,7 @@ public class VehicleService {
     // ----------------------------------------
     // DELETE
     // ----------------------------------------
+    @Transactional
     public void deleteVehicle(Long id) {
 
         Long companyId = currentUserService.getCompanyId();

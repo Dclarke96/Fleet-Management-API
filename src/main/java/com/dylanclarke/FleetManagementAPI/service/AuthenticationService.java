@@ -9,6 +9,7 @@ import com.dylanclarke.FleetManagementAPI.api.ApiResponse;
 import com.dylanclarke.FleetManagementAPI.dto.AuthRequest;
 import com.dylanclarke.FleetManagementAPI.dto.RegisterRequest;
 import com.dylanclarke.FleetManagementAPI.exception.AuthenticationException;
+import com.dylanclarke.FleetManagementAPI.exception.DuplicateResourceException;
 import com.dylanclarke.FleetManagementAPI.model.Company;
 import com.dylanclarke.FleetManagementAPI.model.Role;
 import com.dylanclarke.FleetManagementAPI.model.User;
@@ -40,8 +41,14 @@ public class AuthenticationService {
     public ApiResponse<String> register(RegisterRequest request) {
 
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            return ApiResponse.failure(
-                "Username already exists"
+
+            log.warn(
+                    "Registration failed: username already exists username={}",
+                    request.getUsername()
+            );
+
+            throw new DuplicateResourceException(
+                    "Username already exists"
             );
         }
 

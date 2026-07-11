@@ -30,10 +30,6 @@ public class AuthController {
 
         ApiResponse<String> response = authenticationService.register(request);
 
-        if (!response.isSuccess()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-        }
-
         return ResponseEntity
         .status(HttpStatus.CREATED)
         .body(response);
