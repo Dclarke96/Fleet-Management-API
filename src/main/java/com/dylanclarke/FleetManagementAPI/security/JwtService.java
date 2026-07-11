@@ -1,32 +1,40 @@
 package com.dylanclarke.FleetManagementAPI.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import jakarta.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.function.Function;
+
+import javax.crypto.SecretKey;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.dylanclarke.FleetManagementAPI.model.User;
 
-import javax.crypto.SecretKey;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
-import java.util.Date;
-import java.util.function.Function;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class JwtService {
 
+    private static final String ISSUER = "fleet-management-api";
+
     @Value("${jwt.secret}")
     private String secret;
+
+    @Value("${jwt.expiration}")
+    private long expiration;
 
     private SecretKey key;
 
     @PostConstruct
     public void init() {
-        key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+
+        key = Keys.hmacShaKeyFor(
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     /**
@@ -35,10 +43,13 @@ public class JwtService {
     public String generateToken(User user) {
 
         return Jwts.builder()
+                .issuer(ISSUER)
                 .subject(user.getUsername())
-                .claim("role", user.getRole().name())   // New
+                .claim("role", user.getRole().name())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .expiration(
+                        new Date(System.currentTimeMillis() + expiration)
+                )
                 .signWith(key)
                 .compact();
     }
@@ -47,20 +58,30 @@ public class JwtService {
      * Returns the username (subject) from the token.
      */
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+
+        return extractClaim(
+                token,
+                Claims::getSubject
+        );
     }
 
     /**
      * Returns the expiration date from the token.
      */
     public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+
+        return extractClaim(
+                token,
+                Claims::getExpiration
+        );
     }
 
     /**
      * Generic claim extractor.
      */
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    public <T> T extractClaim(
+            String token,
+            Function<Claims, T> claimsResolver) {
 
         Claims claims = extractAllClaims(token);
 
@@ -83,18 +104,8 @@ public class JwtService {
      * Checks if the token has expired.
      */
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
 
-    /**
-     * Validates that the token belongs to the supplied user
-     * and has not expired.
-     */
-    public boolean isTokenValid(String token, User user) {
-
-        String username = extractUsername(token);
-
-        return username.equals(user.getUsername())
-                && !isTokenExpired(token);
+        return extractExpiration(token)
+                .before(new Date());
     }
 }
