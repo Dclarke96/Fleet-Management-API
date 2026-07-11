@@ -19,7 +19,6 @@ import com.dylanclarke.FleetManagementAPI.dto.MaintenanceRequestDTO;
 import com.dylanclarke.FleetManagementAPI.dto.MaintenanceResponseDTO;
 import com.dylanclarke.FleetManagementAPI.service.MaintenanceService;
 
-
 import jakarta.validation.Valid;
 
 @RestController
@@ -44,7 +43,7 @@ public class MaintenanceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<MaintenanceResponseDTO>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<MaintenanceResponseDTO>> getMaintenanceById(@PathVariable Long id) {
 
         MaintenanceResponseDTO response = maintenanceService.getMaintenanceById(id);
 
@@ -93,7 +92,7 @@ public class MaintenanceController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> deleteMaintenance(
+    public ResponseEntity<ApiResponse<Void>> deleteMaintenance(
            @PathVariable Long id
     ) {
 
