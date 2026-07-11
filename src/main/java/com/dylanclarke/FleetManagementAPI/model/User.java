@@ -1,39 +1,55 @@
 package com.dylanclarke.FleetManagementAPI.model;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    indexes = {
+        @Index(
+            name = "idx_users_company_id",
+            columnList = "company_id"
+        )
+    }
+)
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
     @Column(unique = true, nullable = false)
     private String username;
+
 
     @Column(unique = true, nullable = false)
     private String email;
 
+
     @Column(nullable = false)
     private String password;
+
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
+
 
     public Long getId() {
         return id;
@@ -43,6 +59,7 @@ public class User {
         this.id = id;
     }
 
+
     public String getUsername() {
         return username;
     }
@@ -50,6 +67,7 @@ public class User {
     public void setUsername(String username) {
         this.username = username;
     }
+
 
     public String getEmail() {
         return email;
@@ -59,6 +77,7 @@ public class User {
         this.email = email;
     }
 
+
     public String getPassword() {
         return password;
     }
@@ -66,6 +85,7 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
 
     public Role getRole() {
         return role;
@@ -75,6 +95,7 @@ public class User {
         this.role = role;
     }
 
+
     public Company getCompany() {
         return company;
     }
@@ -82,5 +103,4 @@ public class User {
     public void setCompany(Company company) {
         this.company = company;
     }
-
 }

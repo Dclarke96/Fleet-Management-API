@@ -4,9 +4,11 @@ import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -16,7 +18,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "vehicles")
+@Table(
+    name = "vehicles",
+    indexes = {
+        @Index(
+            name = "idx_vehicle_company_id",
+            columnList = "company_id"
+        )
+    }
+)
 public class Vehicle {
 
     @Id
@@ -54,18 +64,21 @@ public class Vehicle {
     @NotNull(message = "End date is required")
     private LocalDate endDate;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
+
 
     // -------------------------------
     // Constructors
     // -------------------------------
+
     public Vehicle() {}
 
     public Vehicle(String title, String make, String model, int vehicleYear,
                    String location, boolean maintenanceAlertsEnabled,
                    LocalDate startDate, LocalDate endDate) {
+
         this.title = title;
         this.make = make;
         this.model = model;
@@ -76,10 +89,12 @@ public class Vehicle {
         this.endDate = endDate;
     }
 
-    // convenience constructor with new fields
-    public Vehicle(String title, String vin, String licensePlate, String make, String model, int vehicleYear,
-                   String location, boolean maintenanceAlertsEnabled,
+
+    public Vehicle(String title, String vin, String licensePlate, String make,
+                   String model, int vehicleYear, String location,
+                   boolean maintenanceAlertsEnabled,
                    LocalDate startDate, LocalDate endDate) {
+
         this.title = title;
         this.vin = vin;
         this.licensePlate = licensePlate;
@@ -92,44 +107,115 @@ public class Vehicle {
         this.endDate = endDate;
     }
 
+
     // -------------------------------
     // Getters & Setters
     // -------------------------------
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getVin() { return vin; }
-    public void setVin(String vin) { this.vin = vin; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getLicensePlate() { return licensePlate; }
-    public void setLicensePlate(String licensePlate) { this.licensePlate = licensePlate; }
 
-    public String getMake() { return make; }
-    public void setMake(String make) { this.make = make; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getModel() { return model; }
-    public void setModel(String model) { this.model = model; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public int getVehicleYear() { return vehicleYear; }
-    public void setVehicleYear(int vehicleYear) { this.vehicleYear = vehicleYear; }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public String getVin() {
+        return vin;
+    }
 
-    public boolean isMaintenanceAlertsEnabled() { return maintenanceAlertsEnabled; }
+    public void setVin(String vin) {
+        this.vin = vin;
+    }
+
+
+    public String getLicensePlate() {
+        return licensePlate;
+    }
+
+    public void setLicensePlate(String licensePlate) {
+        this.licensePlate = licensePlate;
+    }
+
+
+    public String getMake() {
+        return make;
+    }
+
+    public void setMake(String make) {
+        this.make = make;
+    }
+
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+
+    public int getVehicleYear() {
+        return vehicleYear;
+    }
+
+    public void setVehicleYear(int vehicleYear) {
+        this.vehicleYear = vehicleYear;
+    }
+
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+
+    public boolean isMaintenanceAlertsEnabled() {
+        return maintenanceAlertsEnabled;
+    }
+
     public void setMaintenanceAlertsEnabled(boolean maintenanceAlertsEnabled) {
         this.maintenanceAlertsEnabled = maintenanceAlertsEnabled;
     }
 
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
 
-    public LocalDate getEndDate() { return endDate; }
-    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    public LocalDate getStartDate() {
+        return startDate;
+    }
 
-    public Company getCompany() {return company;}
-    public void setCompany(Company company) {this.company = company;}
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
+    }
 }

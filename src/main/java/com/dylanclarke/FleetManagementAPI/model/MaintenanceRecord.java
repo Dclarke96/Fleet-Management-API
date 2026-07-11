@@ -8,12 +8,21 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "maintenance_records")
+@Table(
+    name = "maintenance_records",
+    indexes = {
+        @Index(
+            name = "idx_maintenance_vehicle_id",
+            columnList = "vehicle_id"
+        )
+    }
+)
 public class MaintenanceRecord {
 
     @Id
@@ -52,21 +61,52 @@ public class MaintenanceRecord {
     }
 
     // Getters & Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public Long getId() {
+        return id;
+    }
 
-    public LocalDate getServiceDate() { return serviceDate; }
-    public void setServiceDate(LocalDate serviceDate) { this.serviceDate = serviceDate; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public boolean isAlertsEnabled() { return alertsEnabled; }
-    public void setAlertsEnabled(boolean alertsEnabled) { this.alertsEnabled = alertsEnabled; }
+    public String getDescription() {
+        return description;
+    }
 
-    public Double getCost() { return cost; }
-    public void setCost(Double cost) { this.cost = cost; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public Vehicle getVehicle() { return vehicle; }
-    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
+    public LocalDate getServiceDate() {
+        return serviceDate;
+    }
+
+    public void setServiceDate(LocalDate serviceDate) {
+        this.serviceDate = serviceDate;
+    }
+
+    public boolean isAlertsEnabled() {
+        return alertsEnabled;
+    }
+
+    public void setAlertsEnabled(boolean alertsEnabled) {
+        this.alertsEnabled = alertsEnabled;
+    }
+
+    public Double getCost() {
+        return cost;
+    }
+
+    public void setCost(Double cost) {
+        this.cost = cost;
+    }
+
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
+
+    public void setVehicle(Vehicle vehicle) {
+        this.vehicle = vehicle;
+    }
 }

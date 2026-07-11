@@ -1,7 +1,7 @@
 @baseUrl = http://localhost:8080
 @username = persistentUser2
 @password = 1234
-@authToken = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI3NzUwNzUsImV4cCI6MTc4Mjc3ODY3NX0.hiF49fyzecUp8XB0hYL9t6sZVXjWiuvqdYPo2F1ZojRLNcU8iObAJsrdYXP_H_Uh_mCRKWnEikVHoHD1nxek5Q
+@authToken = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODM3MTgxODcsImV4cCI6MTc4MzcyMTc4N30.7lYU8nRPBjTxj8q9yJpe23BsipXXejrp4qCPcqS1uPhdDAdWYdRVoDlibrZ3yzJ8eFhtP5HNzTwOVdIXYspp4Q
 @invalidToken = expiredToken123
 
 @usernameB = persistentUserB
