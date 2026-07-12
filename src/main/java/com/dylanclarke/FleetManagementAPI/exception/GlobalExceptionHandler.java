@@ -41,8 +41,9 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
 
         logger.warn(
-                "RESOURCE_NOT_FOUND traceId={} uri={} message={}",
+                "RESOURCE_NOT_FOUND traceId={} method={} uri={} message={}",
                 traceId,
+                request.getMethod(),
                 request.getRequestURI(),
                 ex.getMessage()
         );
@@ -69,8 +70,9 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
 
         logger.warn(
-                "VALIDATION_FAILED traceId={} uri={} message={}",
+                "VALIDATION_FAILED traceId={} method={} uri={} message={}",
                 traceId,
+                request.getMethod(),
                 request.getRequestURI(),
                 ex.getMessage()
         );
@@ -97,8 +99,9 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
 
         logger.warn(
-                "DUPLICATE_RESOURCE traceId={} uri={} message={}",
+                "DUPLICATE_RESOURCE traceId={} method={} uri={} message={}",
                 traceId,
+                request.getMethod(),
                 request.getRequestURI(),
                 ex.getMessage()
         );
@@ -125,10 +128,11 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
 
         logger.warn(
-                "DATA_INTEGRITY_VIOLATION traceId={} uri={} message={}",
+                "DATA_INTEGRITY_VIOLATION traceId={} method={} uri={} message={}",
                 traceId,
+                request.getMethod(),
                 request.getRequestURI(),
-                ex.getMostSpecificCause().getMessage()
+                ex.getMostSpecificCause().getClass().getSimpleName()
         );
 
         ErrorResponse response = new ErrorResponse(
@@ -165,8 +169,9 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toList());
 
         logger.warn(
-                "REQUEST_VALIDATION_FAILED traceId={} uri={} fieldErrors={}",
+                "REQUEST_VALIDATION_FAILED traceId={} method={} uri={} fieldErrors={}",
                 traceId,
+                request.getMethod(),
                 request.getRequestURI(),
                 fieldErrors
         );
@@ -195,8 +200,9 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
 
         logger.warn(
-                "BAD_REQUEST traceId={} uri={} message={}",
+                "BAD_REQUEST traceId={} method={} uri={} message={}",
                 traceId,
+                request.getMethod(),
                 request.getRequestURI(),
                 ex.getMessage()
         );
@@ -255,8 +261,9 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
 
         logger.warn(
-                "AUTH_FAILED traceId={} uri={} message={}",
+                "AUTH_FAILED traceId={} method={} uri={}",
                 traceId,
+                request.getMethod(),
                 request.getRequestURI()
         );
 
@@ -282,8 +289,9 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
 
         logger.error(
-                "UNEXPECTED_ERROR traceId={} uri={} message={}",
+                "UNEXPECTED_ERROR traceId={} method={} uri={} message={}",
                 traceId,
+                request.getMethod(),
                 request.getRequestURI(),
                 ex.getMessage(),
                 ex
@@ -313,8 +321,9 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
 
         logger.warn(
-                "ACCESS_DENIED traceId={} uri={}",
+                "ACCESS_DENIED traceId={} method={} uri={}",
                 traceId,
+                request.getMethod(),
                 request.getRequestURI()
         );
 

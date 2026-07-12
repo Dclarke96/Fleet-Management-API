@@ -1,6 +1,7 @@
 package com.dylanclarke.FleetManagementAPI.logging;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,11 +30,15 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
         long startTime = System.currentTimeMillis();
 
+        String traceId = UUID.randomUUID().toString();
+        request.setAttribute("traceId", traceId);
+
         String method = request.getMethod();
         String uri = request.getRequestURI();
 
         log.info(
-                "REQUEST_START method={} uri={}",
+                "REQUEST_START traceId={} method={} uri={}",
+                traceId,
                 method,
                 uri
         );
@@ -47,10 +52,11 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             String userInfo = "anonymous";
             String companyInfo = "unknown";
 
-            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            var authentication =
+                    SecurityContextHolder.getContext().getAuthentication();
 
-            if (authentication != null &&
-                    authentication.getPrincipal() instanceof CustomUserDetails user) {
+            if (authentication != null
+                    && authentication.getPrincipal() instanceof CustomUserDetails user) {
 
                 userInfo = String.valueOf(user.getId());
                 companyInfo = String.valueOf(user.getCompanyId());
@@ -59,7 +65,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             long duration = System.currentTimeMillis() - startTime;
 
             log.info(
-                    "REQUEST_COMPLETE method={} uri={} status={} durationMs={} userId={} companyId={}",
+                    "REQUEST_COMPLETE traceId={} method={} uri={} status={} durationMs={} userId={} companyId={}",
+                    traceId,
                     method,
                     uri,
                     response.getStatus(),
