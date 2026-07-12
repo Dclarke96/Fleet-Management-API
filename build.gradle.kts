@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.dylanclarke"
-version = "0.0.1-SNAPSHOT"
+version = "2.0.0"
 description = "Fleet Management REST API"
 
 java {
