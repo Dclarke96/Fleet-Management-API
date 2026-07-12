@@ -1,95 +1,261 @@
 # Fleet Management API
 
 ![Java](https://img.shields.io/badge/Java-17-blue)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.1.3-brightgreen)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.2-brightgreen)
 
 ## Overview
+
 Fleet Management API is a backend service designed to help businesses track vehicles, manage maintenance records, and maintain operational visibility across their fleet.
 
-It provides secure, scalable RESTful endpoints for managing fleet data, enabling real-time updates and structured record keeping.  
-It also provides CRUD operations, search functionality, and input validation, supporting the creation of a scalable fleet management system.
+The API provides secure, scalable RESTful endpoints for managing fleet data, including vehicle management, maintenance tracking, authentication, authorization, search functionality, pagination, and validation.
 
-Designed to demonstrate backend system design and real-world application architecture
+The project is designed to demonstrate production-oriented backend development practices, including layered architecture, DTO-based API boundaries, security implementation, centralized exception handling, and integration testing.
 
 ---
 
 ## Tech Stack
-- **Language:** Java 17  
-- **Framework:** Spring Boot 3.x  
-- **Database:** PostgreSQL  
-- **Validation:** Jakarta Validation  
-- **Build Tool:** Gradle  
-- **Design Pattern:** Layered Architecture (Controller → Service → Repository)  
-- **Testing:** JUnit (if applicable)  
+
+* **Language:** Java 17
+* **Framework:** Spring Boot 3.4.2
+* **Database:** PostgreSQL
+* **Validation:** Jakarta Validation
+* **Security:** Spring Security + JWT Authentication
+* **Build Tool:** Gradle
+* **Architecture:** Layered Architecture with separated API, business logic, persistence, security, and cross-cutting concerns
+* **Testing:** JUnit 5 + Spring Boot Test
 
 ---
 
 ## Architecture
-The backend follows a **3-tier layered architecture**:
 
-Controller Layer → Service Layer → Repository Layer → Database
+The backend follows a layered architecture with clear separation between application responsibilities:
 
-- Controllers handle API requests and map to services.  
-- Services contain business logic and validation.  
-- Repositories manage data access via JPA.  
-- Entities (`Vehicle`, `MaintenanceRecord`) are mapped to database tables.  
-- DTOs decouple internal entities from API requests/responses.  
+```
+Controller Layer
+        ↓
+Service Layer
+        ↓
+Repository Layer
+        ↓
+Database
+```
 
-For a detailed overview, see: [Architecture Overview](docs/architecture.md)
+Supporting layers include:
+
+* **API Layer** - Provides standardized API responses and pagination models.
+* **DTO Layer** - Separates external API contracts from internal persistence models.
+* **Security Layer** - Handles JWT authentication, authorization, and current user context.
+* **Exception Layer** - Provides centralized exception handling and consistent error responses.
+* **Logging Layer** - Provides request logging and traceability.
+
+Key architectural decisions:
+
+* Controllers remain thin and delegate business logic to services.
+* Services contain application rules and workflows.
+* Repositories manage database access through JPA.
+* DTOs protect API contracts from internal entity changes.
+* Security concerns are isolated from business logic.
+
+For a detailed overview, see:
+
+* [Architecture Overview](docs/architecture.md)
 
 ---
 
 ## API Documentation
-The API exposes endpoints for managing vehicles and maintenance records.  
-Endpoints include GET, POST, PUT, DELETE, and search functionality.
 
-Detailed endpoint documentation with request/response examples: [API Design](docs/api-design.md)
+The API exposes endpoints for managing:
+
+* User authentication
+* Vehicles
+* Maintenance records
+
+Supported operations include:
+
+* GET
+* POST
+* PUT
+* DELETE
+* Search
+* Pagination
+
+Detailed endpoint documentation with request and response examples:
+
+* [API Design](docs/api-design.md)
+
+---
+
+## Authentication
+
+The API uses JWT-based authentication.
+
+### Registration
+
+Create a new account:
+
+```
+POST /api/auth/register
+```
+
+### Login
+
+Authenticate and receive a JWT token:
+
+```
+POST /api/auth/login
+```
+
+Example authentication header for protected endpoints:
+
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+Protected resources require a valid authentication token.
 
 ---
 
 ## Design Decisions
-All major architecture and implementation decisions are documented, including:
-- Why layered architecture was chosen  
-- Why DTOs are used  
-- Validation strategies  
-- Repository query design  
 
-See full explanation: [Design Decisions](docs/design-decisions.md)
+Major architecture and implementation decisions are documented, including:
+
+* Why layered architecture was selected
+* Why DTOs are used
+* Authentication and authorization strategy
+* Validation approach
+* Exception handling design
+* Repository query design
+* Testing strategy
+
+See:
+
+* [Design Decisions](docs/design-decisions.md)
 
 ---
 
 ## Project Roadmap
-This project is designed with a phased roadmap:
 
-- Version 1 (Completed): Vehicle and Maintenance CRUD, DTO mapping, validation, search  
-- Version 2 (Planned): Authentication/Authorization, role-based access, reporting, API documentation website  
-- Future Ideas: Notifications, analytics dashboard, data import/export  
+This project has evolved through multiple development phases.
 
-Detailed roadmap: [Project Roadmap](docs/project-roadmap.md)
+### Version 1.0
+
+Completed:
+
+* Vehicle CRUD operations
+* Maintenance CRUD operations
+* DTO mapping
+* Validation
+* Search functionality
+* Pagination
+
+### Version 2.0
+
+Completed:
+
+* JWT authentication
+* User registration and login
+* Role-based security foundation
+* Company-level data isolation
+* Centralized exception handling
+* Production-oriented configuration
+* Integration testing coverage
+
+### Future Ideas
+
+Potential future enhancements:
+
+* Maintenance reminders
+* Fleet analytics dashboard
+* Reporting
+* Driver assignments
+* Data import/export
+* Notifications
+* Additional operational insights
+
+Detailed roadmap:
+
+* [Project Roadmap](docs/project-roadmap.md)
 
 ---
 
-## Getting Started
+# Getting Started
 
-### Prerequisites
-- Java 17
-- PostgreSQL database
-- Gradle
+## Prerequisites
 
-### Running the Project
+Before running the application, ensure you have:
+
+* Java 17
+* PostgreSQL database
+* Gradle
+
+---
+
+## Environment Configuration
+
+The application uses Spring profiles:
+
+* `local` - Local development environment
+* `test` - Automated testing environment
+* `prod` - Production environment
+
+Sensitive configuration values should be provided through environment variables.
+
+Required variables:
+
+### Database
+
+```
+DB_PASSWORD=<database-password>
+```
+
+### JWT
+
+```
+JWT_SECRET=<jwt-secret-key>
+```
+
+---
+
+## Running the Project
+
 1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/Dclarke96/Fleet-Management-API.git
-    cd Fleet-Management-API
-    git checkout dev
-    ```
+```bash
+git clone https://github.com/Dclarke96/Fleet-Management-API.git
+cd Fleet-Management-API
+```
 
-2. Configure PostgreSQL connection in application.properties or environment variables
-3. Build and run: 
+2. Configure PostgreSQL and environment variables.
 
-    ```bash
-    ./gradlew bootRun
-    ```
-    
-4. The API will start at http://localhost:8080
+3. Build and run:
+
+```bash
+./gradlew bootRun
+```
+
+4. The API will start at:
+
+```
+http://localhost:8080
+```
+
+---
+
+## Running Tests
+
+Execute the automated test suite:
+
+```bash
+./gradlew test
+```
+
+The project includes integration tests covering:
+
+* Authentication flows
+* Authorization rules
+* Data integrity scenarios
+* Exception handling
+* Vehicle workflows
+* Maintenance workflows
+
+---
