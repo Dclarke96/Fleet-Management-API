@@ -108,6 +108,8 @@ public class SecurityConfig {
                 // SECURITY HEADERS
                 // =========================
                 .headers(headers -> headers
+                        // Allows embedded H2 console during local development.
+                        // Safe for production because the H2 console is not enabled.
                         .frameOptions(frame -> frame.sameOrigin())
                 )
 
@@ -147,12 +149,20 @@ public class SecurityConfig {
                 "POST",
                 "PUT",
                 "PATCH",
-                "DELETE"
+                "DELETE",
+                "OPTIONS"
         ));
 
         configuration.setAllowedHeaders(List.of("*"));
 
+        configuration.setExposedHeaders(List.of(
+                "Authorization"
+        ));
+
         configuration.setAllowCredentials(true);
+
+        // Cache preflight requests for one hour
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
@@ -168,6 +178,8 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
 
-        return new BCryptPasswordEncoder();
+        // BCrypt strength of 12 provides strong password hashing
+        // while remaining performant for authentication workloads.
+        return new BCryptPasswordEncoder(12);
     }
 }
