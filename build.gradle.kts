@@ -26,8 +26,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
-
     // --- JWT Authentication ---
     implementation ("io.jsonwebtoken:jjwt-api:0.12.5")
     runtimeOnly ("io.jsonwebtoken:jjwt-impl:0.12.5")
@@ -39,7 +37,6 @@ dependencies {
     // --- Testing ---
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("com.jayway.jsonpath:json-path:2.8.0")
 }
 
 tasks.withType<Test> {
