@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:8080
+@baseUrl = https://fleet-management-api-beff.onrender.com
 @username = persistentUser2
 @password = 1234
 @authToken = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODM3MTgxODcsImV4cCI6MTc4MzcyMTc4N30.7lYU8nRPBjTxj8q9yJpe23BsipXXejrp4qCPcqS1uPhdDAdWYdRVoDlibrZ3yzJ8eFhtP5HNzTwOVdIXYspp4Q

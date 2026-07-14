@@ -35,7 +35,7 @@ public class AuthenticationService {
     this.companyRepository = companyRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
-}
+    }
 
     @Transactional
     public ApiResponse<String> register(RegisterRequest request) {

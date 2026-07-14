@@ -48,6 +48,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
+    /**
+     * Skip JWT processing for authentication endpoints.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+
+        String path = request.getServletPath();
+
+        boolean skip = path.startsWith("/api/auth/");
+
+        if (skip) {
+            log.debug("Skipping JWT filter for {}", path);
+        }
+
+        return skip;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -56,12 +72,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-
         // ----------------------------------------
         // EXTRACT JWT TOKEN
         // ----------------------------------------
         String authHeader = request.getHeader("Authorization");
 
+        log.info("Authorization Header: {}", authHeader);
 
         if (!StringUtils.hasText(authHeader)
                 || !authHeader.startsWith(BEARER_PREFIX)) {
@@ -76,10 +92,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-
         final String token =
                 authHeader.substring(BEARER_PREFIX_LENGTH);
-
 
         try {
 
@@ -89,11 +103,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             final String username =
                     jwtService.extractUsername(token);
 
-
             if (username != null
                     && SecurityContextHolder.getContext()
                     .getAuthentication() == null) {
-
 
                 // ----------------------------------------
                 // LOAD USER
@@ -102,14 +114,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .findByUsername(username)
                         .orElse(null);
 
-
                 if (user == null) {
 
                     log.warn(
                             "JWT authentication failed username={} reason=user_not_found",
                             username
                     );
-
 
                     authenticationEntryPoint.commence(
                             request,
@@ -122,12 +132,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     return;
                 }
 
-
                 // ----------------------------------------
                 // BUILD AUTHENTICATION
                 // ----------------------------------------
                 authenticateUser(user, request);
-
 
                 log.debug(
                         "JWT authentication successful userId={} companyId={} uri={}",
@@ -137,16 +145,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 );
             }
 
-
         } catch (JwtException | IllegalArgumentException ex) {
-
 
             log.warn(
                     "JWT authentication failed method={} uri={} reason=invalid_token",
                     request.getMethod(),
                     request.getRequestURI()
             );
-
 
             authenticationEntryPoint.commence(
                     request,
@@ -160,14 +165,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-
         // ----------------------------------------
         // CONTINUE REQUEST
         // ----------------------------------------
         filterChain.doFilter(request, response);
     }
-
-
 
     /**
      * Creates authenticated Spring Security context
@@ -177,13 +179,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             HttpServletRequest request
     ) {
 
-
         List<GrantedAuthority> authorities = List.of(
                 new SimpleGrantedAuthority(
                         "ROLE_" + user.getRole().name()
                 )
         );
-
 
         CustomUserDetails principal =
                 new CustomUserDetails(
@@ -194,7 +194,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         authorities
                 );
 
-
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
                         principal,
@@ -202,12 +201,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         authorities
                 );
 
-
         authentication.setDetails(
                 new WebAuthenticationDetailsSource()
                         .buildDetails(request)
         );
-
 
         SecurityContextHolder.getContext()
                 .setAuthentication(authentication);
