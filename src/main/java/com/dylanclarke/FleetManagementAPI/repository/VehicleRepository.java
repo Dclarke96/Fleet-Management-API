@@ -44,12 +44,4 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
             Pageable pageable
     );
 
-    // ----------------------------------------
-    // OPTIONAL SIMPLE SEARCH
-    // ----------------------------------------
-    List<Vehicle> findByMakeContainingIgnoreCaseOrModelContainingIgnoreCaseOrTitleContainingIgnoreCase(
-            String make,
-            String model,
-            String title
-    );
 }

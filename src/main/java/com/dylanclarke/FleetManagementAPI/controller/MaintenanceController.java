@@ -38,17 +38,17 @@ public class MaintenanceController {
         PageResponse<MaintenanceResponseDTO> pageResponse = new PageResponse<>(page);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, pageResponse, "Maintenance retrieved successfully")
+                ApiResponse.success(pageResponse, "Maintenance retrieved successfully")
         );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<MaintenanceResponseDTO>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<MaintenanceResponseDTO>> getMaintenanceById(@PathVariable Long id) {
 
         MaintenanceResponseDTO response = maintenanceService.getMaintenanceById(id);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, response, "Maintenance retrieved successfully")
+                ApiResponse.success(response, "Maintenance retrieved successfully")
         );
     }
 
@@ -65,11 +65,7 @@ public class MaintenanceController {
                 new PageResponse<>(page);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        pageResponse,
-                        "Maintenance retrieved successfully"
-                )
+                ApiResponse.success(pageResponse, "Maintenance retrieved successfully")
         );
     }
 
@@ -80,7 +76,7 @@ public class MaintenanceController {
         MaintenanceResponseDTO response = maintenanceService.addMaintenance(requestDTO);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(true, response, "Maintenance created successfully"));
+                .body(ApiResponse.success(response, "Maintenance created successfully"));
     }
 
     @PutMapping("/{id}")
@@ -91,13 +87,22 @@ public class MaintenanceController {
         MaintenanceResponseDTO response = maintenanceService.updateMaintenance(id, requestDTO);
 
         return ResponseEntity.ok(
-                new ApiResponse<>(true, response, "Maintenance updated successfully")
+                ApiResponse.success(response, "Maintenance updated successfully")
         );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMaintenance(@PathVariable Long id) {
-        maintenanceService.deleteMaintenance(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ApiResponse<Void>> deleteMaintenance(
+           @PathVariable Long id
+    ) {
+
+       maintenanceService.deleteMaintenance(id);
+
+       return ResponseEntity.ok(
+            ApiResponse.success(
+                    null,
+                    "Maintenance deleted successfully"
+            )
+        );
     }
 }

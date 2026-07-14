@@ -1,57 +1,185 @@
 package com.dylanclarke.FleetManagementAPI.config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.dylanclarke.FleetManagementAPI.util.JwtAuthFilter;
-import com.dylanclarke.FleetManagementAPI.util.JwtService;
+import com.dylanclarke.FleetManagementAPI.logging.RequestLoggingFilter;
+import com.dylanclarke.FleetManagementAPI.security.JwtAuthFilter;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
+    private static final String AUTH_ENDPOINT = "/api/auth/**";
+
     // =========================
-    // PRODUCTION SECURITY
+    // AUTH MANAGER
     // =========================
     @Bean
-    @Profile("!test")
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+
+        return config.getAuthenticationManager();
+    }
+
+    // =========================
+    // USER DETAILS SERVICE
+    // (Prevents Spring Boot from creating a default user)
+    // =========================
+    @Bean
+    public UserDetailsService userDetailsService() {
+
+        return username -> {
+            throw new UnsupportedOperationException(
+                    "JWT authentication only. No in-memory login.");
+        };
+    }
+
+    // =========================
+    // SECURITY FILTER CHAIN
+    // =========================
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthFilter jwtAuthFilter,
+            RequestLoggingFilter requestLoggingFilter,
+            AuthenticationEntryPoint authenticationEntryPoint) throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+
+                // =========================
+                // CORS
+                // =========================
+                .cors(Customizer.withDefaults())
+
+                // =========================
+                // CSRF
+                // =========================
+                .csrf(csrf -> csrf.disable())
+
+                // =========================
+                // SESSION MANAGEMENT
+                // =========================
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                // =========================
+                // REST API ERROR HANDLING
+                // =========================
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                )
+
+                // =========================
+                // AUTHORIZATION
+                // =========================
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(AUTH_ENDPOINT).permitAll()
+                        .anyRequest().authenticated()
+                )
+
+                // =========================
+                // DISABLE DEFAULT LOGIN
+                // =========================
+                .formLogin(form -> form.disable())
+
+                .httpBasic(httpBasic -> httpBasic.disable())
+
+                // =========================
+                // SECURITY HEADERS
+                // =========================
+                .headers(headers -> headers
+                        // Allows embedded H2 console during local development.
+                        // Safe for production because the H2 console is not enabled.
+                        .frameOptions(frame -> frame.sameOrigin())
+                )
+
+                // =========================
+                // REQUEST LOGGING
+                // =========================
+                .addFilterBefore(
+                        requestLoggingFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
+
+                // =========================
+                // JWT AUTHENTICATION
+                // =========================
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
 
     // =========================
-    // TEST SECURITY (DISABLED AUTH)
+    // CORS CONFIGURATION
     // =========================
     @Bean
-    @Profile("test")
-    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+    public CorsConfigurationSource corsConfigurationSource() {
 
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        CorsConfiguration configuration = new CorsConfiguration();
 
-        return http.build();
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000"
+        ));
+
+        configuration.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
+        ));
+
+        configuration.setAllowedHeaders(List.of("*"));
+
+        configuration.setExposedHeaders(List.of(
+                "Authorization"
+        ));
+
+        configuration.setAllowCredentials(true);
+
+        // Cache preflight requests for one hour
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 
     // =========================
-    // PASSWORD ENCODER (GLOBAL)
+    // PASSWORD ENCODER
     // =========================
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+
+        // BCrypt strength of 12 provides strong password hashing
+        // while remaining performant for authentication workloads.
+        return new BCryptPasswordEncoder(12);
     }
 }

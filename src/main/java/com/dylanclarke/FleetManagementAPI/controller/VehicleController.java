@@ -40,7 +40,7 @@ public class VehicleController {
         Page<VehicleResponseDTO> page = service.getAllVehicles(pageable);
         PageResponse<VehicleResponseDTO> pageResponse = new PageResponse<>(page);
         return ResponseEntity.ok(
-                new ApiResponse<>(true, pageResponse, "Vehicles retrieved successfully")
+                ApiResponse.success(pageResponse,"Vehicle retrieved successfully")
         );
     }
 
@@ -51,7 +51,7 @@ public class VehicleController {
     public ResponseEntity<ApiResponse<VehicleResponseDTO>> getVehicleById(@PathVariable Long id) {
         VehicleResponseDTO dto = service.getVehicleById(id);
         return ResponseEntity.ok(
-                new ApiResponse<>(true, dto, "Vehicle retrieved successfully")
+                ApiResponse.success(dto,"Vehicle retrieved successfully")
         );
     }
 
@@ -63,7 +63,7 @@ public class VehicleController {
         Page<VehicleResponseDTO> page = service.searchVehicles(query, pageable);
         PageResponse<VehicleResponseDTO> pageResponse = new PageResponse<>(page);
         return ResponseEntity.ok(
-                new ApiResponse<>(true, pageResponse, "Vehicles search results retrieved successfully")
+                ApiResponse.success(pageResponse,"Vehicles search results retrieved successfully")
         );
     }
 
@@ -76,7 +76,7 @@ public class VehicleController {
         VehicleResponseDTO created = service.addVehicle(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(true, created, "Vehicle created successfully"));
+                .body(ApiResponse.success(created, "Vehicle created successfully"));
     }
 
     // ----------------------------------------
@@ -88,7 +88,7 @@ public class VehicleController {
             @Valid @RequestBody VehicleRequestDTO request) {
         VehicleResponseDTO updated = service.updateVehicle(id, request);
         return ResponseEntity.ok(
-                new ApiResponse<>(true, updated, "Vehicle updated successfully")
+                ApiResponse.success(updated, "Vehicle updated successfully")
         );
     }
 
@@ -96,8 +96,17 @@ public class VehicleController {
     // DELETE
     // ----------------------------------------
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteVehicle(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteVehicle(
+            @PathVariable Long id
+    ) {
+
         service.deleteVehicle(id);
-        return ResponseEntity.noContent().build();
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        null,
+                     "Vehicle deleted successfully"
+                )
+        );
     }
 }

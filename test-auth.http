@@ -1,11 +1,17 @@
-@baseUrl = https://fleet-management-api-beff.onrender.com/api
+@baseUrl = http://localhost:8080
 @username = persistentUser2
 @password = 1234
+@authToken = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODM3MTgxODcsImV4cCI6MTc4MzcyMTc4N30.7lYU8nRPBjTxj8q9yJpe23BsipXXejrp4qCPcqS1uPhdDAdWYdRVoDlibrZ3yzJ8eFhtP5HNzTwOVdIXYspp4Q
+@invalidToken = expiredToken123
+
+@usernameB = persistentUserB
+@passwordB = 1234
+@authTokenB = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlckIiLCJpYXQiOjE3ODE4MzEwNjQsImV4cCI6MTc4MTgzNDY2NH0.3IG-hGrwcJHDur7bvod6uYppNZYBipKqRvMGRcNXPUkyj2i8QQyN-6MBNtf-hc8GesosRgKt8Bv4UsyyS4Rzlw
 
 # =====================================================
 # 🔐 AUTH - REGISTER (Persistent User for Login Flow)
 # =====================================================
-POST {{baseUrl}}/auth/register
+POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
@@ -19,7 +25,7 @@ Content-Type: application/json
 # =====================================================
 # 🔐 AUTH - LOGIN (Capture Token)
 # =====================================================
-POST {{baseUrl}}/auth/login
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
@@ -40,15 +46,24 @@ Content-Type: application/json
 # =====================================================
 # 🔒 AUTH - ACCESS PROTECTED ROUTE (VALID TOKEN)
 # =====================================================
-GET {{baseUrl}}/vehicles
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+GET {{baseUrl}}/api/vehicles
+Authorization: Bearer {{authToken}}
+
+###
+
+# =====================================================
+# ❌ AUTH - MALFORMED AUTH HEADER
+# =====================================================
+
+GET {{baseUrl}}/api/vehicles
+Authorization: abc123
 
 ###
 
 # =====================================================
 # ❌ AUTH - LOGIN (Wrong Password)
 # =====================================================
-POST {{baseUrl}}/auth/login
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
@@ -61,7 +76,7 @@ Content-Type: application/json
 # =====================================================
 # ❌ AUTH - REGISTER (Invalid Input Validation Test)
 # =====================================================
-POST {{baseUrl}}/auth/register
+POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
@@ -75,7 +90,7 @@ Content-Type: application/json
 # =====================================================
 # 🧪 AUTH - REGISTER (Unique User Test)
 # =====================================================
-POST {{baseUrl}}/auth/register
+POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
@@ -89,23 +104,23 @@ Content-Type: application/json
 # =====================================================
 # ❌ AUTH - ACCESS PROTECTED ROUTE (NO TOKEN)
 # =====================================================
-GET {{baseUrl}}/vehicles
+GET {{baseUrl}}/api/vehicles
 
 ###
 
 # =====================================================
 # ❌ AUTH - ACCESS PROTECTED ROUTE (INVALID TOKEN)
 # =====================================================
-GET {{baseUrl}}/vehicles
-Authorization: Bearer invalidToken123
+GET {{baseUrl}}/api/vehicles
+Authorization: Bearer {{invalidToken}}
 
 ###
 
 # =====================================================
 # 🚗 VEHICLE - CREATE (Authenticated)
 # =====================================================
-POST {{baseUrl}}/vehicles
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+POST {{baseUrl}}/api/vehicles
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
@@ -130,16 +145,16 @@ Content-Type: application/json
 # =====================================================
 # 🚗 VEHICLE - GET BY ID
 # =====================================================
-GET {{baseUrl}}/vehicles/2
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+GET {{baseUrl}}/api/vehicles/2
+Authorization: Bearer {{authToken}}
 
 ###
 
 # =====================================================
 # 🚗 VEHICLE - UPDATE
 # =====================================================
-PUT {{baseUrl}}/vehicles/2
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+PUT {{baseUrl}}/api/vehicles/2
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
@@ -158,23 +173,136 @@ Content-Type: application/json
 # =====================================================
 # 🚗 VEHICLE - SEARCH
 # =====================================================
-GET {{baseUrl}}/vehicles/search?q=Manual&page=0&size=10
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+GET {{baseUrl}}/api/vehicles/search?q=Manual&page=0&size=10
+Authorization: Bearer {{authToken}}
 
 ###
 
 # =====================================================
 # 🚗 VEHICLE - DELETE
 # =====================================================
-DELETE {{baseUrl}}/vehicles/2
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+DELETE {{baseUrl}}/api/vehicles/2
+Authorization: Bearer {{authToken}}
 
 ###
 
 # =====================================================
 # 🚗 VEHICLE - VERIFY DELETE (SHOULD FAIL OR 404)
 # =====================================================
-GET {{baseUrl}}/vehicles/2
-Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJpYXQiOjE3Nzc0MjYxMDQsImV4cCI6MTc3NzQyOTcwNH0.F6BKIgnfVmhJezMEM9s9ayFLbf6BAhQGXRmeSNI0K8vE2ERM4GBcjTzSVQgugb65
+GET {{baseUrl}}/api/vehicles/2
+Authorization: Bearer {{authToken}}
+
+###
+
+
+# =====================================================
+# 🔐 AUTH - LOGIN (SECOND USER - COMPANY B)
+# =====================================================
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{usernameB}}",
+  "password": "{{passwordB}}"
+}
+
+> {%
+    console.log("LOGIN B RESPONSE BODY:", response.body);
+    client.global.set("authTokenB", response.body.data);
+%}
+
+###
+
+# =====================================================
+# 🧪 VEHICLE - CREATE (COMPANY B VEHICLE)
+# =====================================================
+POST {{baseUrl}}/api/vehicles
+Authorization: Bearer {{authTokenB}}
+Content-Type: application/json
+
+{
+  "title": "Company B Vehicle",
+  "make": "Honda",
+  "model": "Civic",
+  "vehicleYear": 2021,
+  "location": "B Garage",
+  "maintenanceAlertsEnabled": true,
+  "startDate": "2026-05-01",
+  "endDate": "2026-12-31"
+}
+
+> {%
+    console.log("CREATED VEHICLE B:", response.body);
+    client.global.set("vehicleIdB", response.body.data.id);
+%}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 1 - CROSS COMPANY VEHICLE ACCESS
+# =====================================================
+GET {{baseUrl}}/api/vehicles/{{vehicleIdB}}
+Authorization: Bearer {{authToken}}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 2 - CROSS COMPANY MAINTENANCE CREATE ATTEMPT
+# =====================================================
+POST {{baseUrl}}/api/maintenance
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "vehicleId": "{{vehicleIdB}}",
+  "description": "Illegal cross-company test",
+  "date": "2026-01-01",
+  "cost": 100
+}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 3 - MAINTENANCE ISOLATION CHECK (CREATE)
+# =====================================================
+POST {{baseUrl}}/api/maintenance
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "vehicleId": "{{vehicleId}}",
+  "description": "Oil Change A",
+  "date": "2026-01-01",
+  "cost": 50
+}
+
+> {%
+    console.log("MAINTENANCE CREATED A:", response.body);
+    client.global.set("maintenanceIdA", response.body.data.id);
+%}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 4 - MAINTENANCE ISOLATION CHECK (ACCESS AS B)
+# =====================================================
+GET {{baseUrl}}/api/maintenance/{{maintenanceIdA}}
+Authorization: Bearer {{authTokenB}}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 5 - LIST ISOLATION CHECK (COMPANY A)
+# =====================================================
+GET {{baseUrl}}/api/maintenance
+Authorization: Bearer {{authToken}}
+
+###
+
+# =====================================================
+# 🚨 TENANT TEST 6 - LIST ISOLATION CHECK (COMPANY B)
+# =====================================================
+GET {{baseUrl}}/api/maintenance
+Authorization: Bearer {{authTokenB}}
 
 ###
