@@ -77,8 +77,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // ----------------------------------------
         String authHeader = request.getHeader("Authorization");
 
-        log.info("Authorization Header: {}", authHeader);
-
         if (!StringUtils.hasText(authHeader)
                 || !authHeader.startsWith(BEARER_PREFIX)) {
 
