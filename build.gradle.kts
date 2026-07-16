@@ -37,6 +37,9 @@ dependencies {
     // --- Testing ---
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+
+    // --- Documentation ---
+    implementation ("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
 }
 
 tasks.withType<Test> {
