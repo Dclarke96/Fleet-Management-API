@@ -1,5 +1,6 @@
 # Fleet Management API
 
+![Build Status](https://github.com/Dclarke96/Fleet-Management-API/actions/workflows/build.yml/badge.svg)
 ![Java](https://img.shields.io/badge/Java-17-blue)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.2-brightgreen)
 ![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-green)
