@@ -2,6 +2,7 @@
 
 ![Java](https://img.shields.io/badge/Java-17-blue)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.2-brightgreen)
+![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-green)
 
 ## Overview
 
@@ -9,7 +10,22 @@ Fleet Management API is a backend service designed to help businesses track vehi
 
 The API provides secure, scalable RESTful endpoints for managing fleet data, including vehicle management, maintenance tracking, authentication, authorization, search functionality, pagination, and validation.
 
-The project is designed to demonstrate production-oriented backend development practices, including layered architecture, DTO-based API boundaries, security implementation, centralized exception handling, and integration testing.
+The project is designed to demonstrate production-oriented backend development practices, including layered architecture, DTO-based API boundaries, security implementation, centralized exception handling, OpenAPI documentation, and integration testing.
+
+---
+
+## Features
+
+* JWT Authentication
+* Company-level data isolation
+* Vehicle Management
+* Maintenance Tracking
+* Search functionality
+* Pagination
+* Jakarta Validation
+* Standardized API responses
+* OpenAPI / Swagger documentation
+* Integration testing
 
 ---
 
@@ -20,6 +36,7 @@ The project is designed to demonstrate production-oriented backend development p
 * **Database:** PostgreSQL
 * **Validation:** Jakarta Validation
 * **Security:** Spring Security + JWT Authentication
+* **API Documentation:** SpringDoc OpenAPI / Swagger UI
 * **Build Tool:** Gradle
 * **Architecture:** Layered Architecture with separated API, business logic, persistence, security, and cross-cutting concerns
 * **Testing:** JUnit 5 + Spring Boot Test
@@ -85,6 +102,31 @@ Detailed endpoint documentation with request and response examples:
 
 ---
 
+## OpenAPI Documentation
+
+Interactive API documentation is available through Swagger UI after starting the application.
+
+### Swagger UI
+
+```
+http://localhost:8080/swagger-ui/index.html
+```
+
+### OpenAPI JSON
+
+```
+http://localhost:8080/v3/api-docs
+```
+
+Swagger UI allows developers to:
+
+* Browse all available endpoints
+* View request and response schemas
+* Authenticate using JWT bearer tokens
+* Execute API requests directly from the browser
+
+---
+
 ## Authentication
 
 The API uses JWT-based authentication.
@@ -112,6 +154,32 @@ Authorization: Bearer <JWT_TOKEN>
 ```
 
 Protected resources require a valid authentication token.
+
+### Using Swagger UI
+
+1. Register a new user or log in using:
+
+```
+POST /api/auth/register
+```
+
+or
+
+```
+POST /api/auth/login
+```
+
+2. Copy the JWT token returned from the login response.
+
+3. Open Swagger UI and click the **Authorize** button.
+
+4. Enter:
+
+```
+Bearer <JWT_TOKEN>
+```
+
+5. Execute protected endpoints directly from the documentation.
 
 ---
 
@@ -159,6 +227,7 @@ Completed:
 * Centralized exception handling
 * Production-oriented configuration
 * Integration testing coverage
+* OpenAPI / Swagger documentation
 
 ### Future Ideas
 
@@ -237,6 +306,18 @@ cd Fleet-Management-API
 
 ```
 http://localhost:8080
+```
+
+5. Open Swagger UI:
+
+```
+http://localhost:8080/swagger-ui/index.html
+```
+
+6. View OpenAPI JSON:
+
+```
+http://localhost:8080/v3/api-docs
 ```
 
 ---
