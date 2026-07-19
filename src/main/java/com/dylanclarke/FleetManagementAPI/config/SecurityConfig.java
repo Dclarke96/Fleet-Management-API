@@ -36,6 +36,11 @@ public class SecurityConfig {
             "/v3/api-docs/**"
     };
 
+    private static final String[] ACTUATOR_ENDPOINTS = {
+        "/actuator/health",
+        "/actuator/health/**"
+    };
+
     // =========================
     // AUTH MANAGER
     // =========================
@@ -105,6 +110,10 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 SWAGGER_ENDPOINTS
+                        ).permitAll()
+
+                        .requestMatchers(
+                                ACTUATOR_ENDPOINTS
                         ).permitAll()
 
                         .anyRequest().authenticated()
