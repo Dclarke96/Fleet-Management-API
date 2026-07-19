@@ -11,7 +11,7 @@ Fleet Management API is a backend service designed to help businesses track vehi
 
 The API provides secure, scalable RESTful endpoints for managing fleet data, including vehicle management, maintenance tracking, authentication, authorization, search functionality, pagination, and validation.
 
-The project is designed to demonstrate production-oriented backend development practices, including layered architecture, DTO-based API boundaries, security implementation, centralized exception handling, OpenAPI documentation, and integration testing.
+The project is designed to demonstrate production-oriented backend development practices, including layered architecture, DTO-based API boundaries, security implementation, centralized exception handling, OpenAPI documentation, integration testing, continuous integration, and containerized deployment workflows.
 
 ---
 
@@ -27,6 +27,8 @@ The project is designed to demonstrate production-oriented backend development p
 * Standardized API responses
 * OpenAPI / Swagger documentation
 * Integration testing
+* GitHub Actions CI Pipeline
+* Docker Containerization
 
 ---
 
@@ -39,8 +41,10 @@ The project is designed to demonstrate production-oriented backend development p
 * **Security:** Spring Security + JWT Authentication
 * **API Documentation:** SpringDoc OpenAPI / Swagger UI
 * **Build Tool:** Gradle
+* **Containerization:** Docker + Docker Compose
 * **Architecture:** Layered Architecture with separated API, business logic, persistence, security, and cross-cutting concerns
 * **Testing:** JUnit 5 + Spring Boot Test
+* **CI/CD:** GitHub Actions
 
 ---
 
@@ -229,6 +233,9 @@ Completed:
 * Production-oriented configuration
 * Integration testing coverage
 * OpenAPI / Swagger documentation
+* GitHub Actions CI pipeline
+* Docker containerization
+* Docker Compose local development environment
 
 ### Future Ideas
 
@@ -257,6 +264,7 @@ Before running the application, ensure you have:
 * Java 17
 * PostgreSQL database
 * Gradle
+* Docker Desktop (optional, for containerized setup)
 
 ---
 
@@ -267,6 +275,7 @@ The application uses Spring profiles:
 * `local` - Local development environment
 * `test` - Automated testing environment
 * `prod` - Production environment
+* `docker` - Docker container environment
 
 Sensitive configuration values should be provided through environment variables.
 
@@ -286,7 +295,45 @@ JWT_SECRET=<jwt-secret-key>
 
 ---
 
-## Running the Project
+## Docker Environment
+
+The project includes Docker support for running the Fleet Management API and PostgreSQL database together in a reproducible local environment.
+
+Docker Compose provides:
+
+* Spring Boot API container
+* PostgreSQL database container
+* Internal container networking
+* Persistent database storage through Docker volumes
+
+Start the application:
+
+```bash
+docker compose up --build
+```
+
+The API will be available at:
+
+```
+http://localhost:8080
+```
+
+Swagger UI:
+
+```
+http://localhost:8080/swagger-ui/index.html
+```
+
+Stop the containers:
+
+```bash
+docker compose down
+```
+
+
+---
+
+## Running the Project Locally
 
 1. Clone the repository:
 
