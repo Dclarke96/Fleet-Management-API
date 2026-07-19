@@ -13,6 +13,32 @@ The API provides secure, scalable RESTful endpoints for managing fleet data, inc
 
 The project is designed to demonstrate production-oriented backend development practices, including layered architecture, DTO-based API boundaries, security implementation, centralized exception handling, OpenAPI documentation, integration testing, continuous integration, and containerized deployment workflows.
 
+## Quick Start
+
+### Run with Docker
+
+```bash
+docker compose up --build
+```
+
+The application will be available at:
+
+- API: http://localhost:8080
+- Swagger UI: http://localhost:8080/swagger-ui/index.html
+- Health Endpoint: http://localhost:8080/actuator/health
+
+### Run Locally
+
+```bash
+./gradlew bootRun
+```
+
+Once the application starts, access:
+
+- API: http://localhost:8080
+- Swagger UI: http://localhost:8080/swagger-ui/index.html
+- Health Endpoint: http://localhost:8080/actuator/health
+
 ---
 
 ## Features
@@ -25,10 +51,13 @@ The project is designed to demonstrate production-oriented backend development p
 * Pagination
 * Jakarta Validation
 * Standardized API responses
+* Centralized exception handling
+* Request logging with trace IDs
+* Spring Boot Actuator health monitoring
 * OpenAPI / Swagger documentation
 * Integration testing
-* GitHub Actions CI Pipeline
-* Docker Containerization
+* GitHub Actions CI pipeline
+* Docker containerization
 
 ---
 
@@ -129,6 +158,36 @@ Swagger UI allows developers to:
 * View request and response schemas
 * Authenticate using JWT bearer tokens
 * Execute API requests directly from the browser
+
+---
+
+## Health Monitoring
+
+Spring Boot Actuator is included to provide application health monitoring for local development and production deployments.
+
+Health endpoint:
+
+```
+GET /actuator/health
+```
+
+When the application is running locally:
+
+```
+http://localhost:8080/actuator/health
+```
+
+The endpoint reports application and database health and can be used by deployment platforms, load balancers, or monitoring systems to verify service availability.
+
+---
+
+## Logging
+
+The application uses structured request logging to improve troubleshooting and operational visibility.
+
+Each incoming request is assigned a unique trace identifier that is included throughout the request lifecycle and in standardized error responses. This allows application logs and client-facing errors to be correlated during debugging.
+
+Application logs intentionally exclude sensitive information such as passwords and JWT tokens.
 
 ---
 
@@ -279,17 +338,21 @@ The application uses Spring profiles:
 
 Sensitive configuration values should be provided through environment variables.
 
-Required variables:
+Required environment variables vary by active Spring profile.
 
-### Database
+### Local Profile
 
 ```
 DB_PASSWORD=<database-password>
+JWT_SECRET=<jwt-secret-key>
 ```
 
-### JWT
+### Production / Docker Profiles
 
 ```
+DB_URL=<jdbc-url>
+DB_USERNAME=<database-username>
+DB_PASSWORD=<database-password>
 JWT_SECRET=<jwt-secret-key>
 ```
 
@@ -386,5 +449,15 @@ The project includes integration tests covering:
 * Exception handling
 * Vehicle workflows
 * Maintenance workflows
+
+Continuous integration is provided through GitHub Actions. Every push and pull request to the `main` and `dev` branches automatically executes the Gradle build and test suite to verify application stability.
+
+---
+
+## Deployment
+
+Deployment guidance, required environment variables, and production configuration are documented in:
+
+* [Deployment Guide](docs/deployment-guide.md)
 
 ---
