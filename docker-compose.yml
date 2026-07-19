@@ -4,9 +4,9 @@ services:
     image: postgres:16
     container_name: fleet-postgres
     environment:
-      POSTGRES_DB: fleetdb
-      POSTGRES_USER: fleetuser
-      POSTGRES_PASSWORD: fleetpassword
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -22,9 +22,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       DB_URL: jdbc:postgresql://postgres:5432/fleetdb
-      DB_USERNAME: fleetuser
-      DB_PASSWORD: fleetpassword
-      JWT_SECRET: your-super-secret-jwt-key-change-me
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
 
 volumes:
   postgres-data:
