@@ -1,34 +1,51 @@
 package com.dylanclarke.FleetManagementAPI.exception;
 
-import java.util.UUID;
-import java.util.stream.Collectors;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.dylanclarke.FleetManagementAPI.dto.ErrorResponse;
+import com.dylanclarke.FleetManagementAPI.exception.AuthenticationException;
+import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
 
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
-/**
- * Global exception handler for the Fleet Management API.
- * 
- * Handles all exceptions thrown by the application and returns
- * consistent, structured error responses to clients.
- */
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger logger =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+
+    /**
+     * Retrieves the existing request trace ID.
+     *
+     * The RequestLoggingFilter creates the trace ID at the beginning
+     * of the request lifecycle. If one does not exist, a fallback ID
+     * is generated to ensure all errors remain traceable.
+     */
+    private String getTraceId(HttpServletRequest request) {
+
+        return Optional.ofNullable(
+                (String) request.getAttribute("traceId")
+        )
+        .orElse(UUID.randomUUID().toString());
+    }
+
 
     /**
      * Handle ResourceNotFoundException
@@ -38,7 +55,7 @@ public class GlobalExceptionHandler {
             ResourceNotFoundException ex,
             HttpServletRequest request) {
 
-        String traceId = UUID.randomUUID().toString();
+        String traceId = getTraceId(request);
 
         logger.warn(
                 "RESOURCE_NOT_FOUND traceId={} method={} uri={} message={}",
@@ -59,6 +76,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
+
     /**
      * Handle ValidationException
      */
@@ -67,7 +85,7 @@ public class GlobalExceptionHandler {
             ValidationException ex,
             HttpServletRequest request) {
 
-        String traceId = UUID.randomUUID().toString();
+        String traceId = getTraceId(request);
 
         logger.warn(
                 "VALIDATION_FAILED traceId={} method={} uri={} message={}",
@@ -88,6 +106,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+
     /**
      * Handle DuplicateResourceException
      */
@@ -96,7 +115,7 @@ public class GlobalExceptionHandler {
             DuplicateResourceException ex,
             HttpServletRequest request) {
 
-        String traceId = UUID.randomUUID().toString();
+        String traceId = getTraceId(request);
 
         logger.warn(
                 "DUPLICATE_RESOURCE traceId={} method={} uri={} message={}",
@@ -117,15 +136,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
+
     /**
-    * Handle database constraint violations
-    */
+     * Handle database constraint violations
+     */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
             DataIntegrityViolationException ex,
             HttpServletRequest request) {
 
-        String traceId = UUID.randomUUID().toString();
+        String traceId = getTraceId(request);
 
         logger.warn(
                 "DATA_INTEGRITY_VIOLATION traceId={} method={} uri={} message={}",
@@ -149,6 +169,7 @@ public class GlobalExceptionHandler {
         );
     }
 
+
     /**
      * Handle MethodArgumentNotValidException
      */
@@ -157,7 +178,7 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex,
             HttpServletRequest request) {
 
-        String traceId = UUID.randomUUID().toString();
+        String traceId = getTraceId(request);
 
         var fieldErrors = ex.getBindingResult()
                 .getFieldErrors()
@@ -189,6 +210,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+
     /**
      * Handle IllegalArgumentException
      */
@@ -197,7 +219,7 @@ public class GlobalExceptionHandler {
             IllegalArgumentException ex,
             HttpServletRequest request) {
 
-        String traceId = UUID.randomUUID().toString();
+        String traceId = getTraceId(request);
 
         logger.warn(
                 "BAD_REQUEST traceId={} method={} uri={} message={}",
@@ -218,6 +240,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+
     /**
      * Handle NoHandlerFoundException
      */
@@ -226,7 +249,7 @@ public class GlobalExceptionHandler {
             NoHandlerFoundException ex,
             HttpServletRequest request) {
 
-        String traceId = UUID.randomUUID().toString();
+        String traceId = getTraceId(request);
 
         logger.warn(
                 "ENDPOINT_NOT_FOUND traceId={} method={} url={}",
@@ -238,9 +261,11 @@ public class GlobalExceptionHandler {
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
                 "Endpoint Not Found",
-                String.format("No handler found for %s %s",
+                String.format(
+                        "No handler found for %s %s",
                         ex.getHttpMethod(),
-                        ex.getRequestURL()),
+                        ex.getRequestURL()
+                ),
                 request.getRequestURI(),
                 traceId
         );
@@ -248,17 +273,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
+
     /**
      * Handle AuthenticationException
-     *
-     * IMPORTANT: This is now the SINGLE place where auth failures are logged.
      */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(
             AuthenticationException ex,
             HttpServletRequest request) {
 
-        String traceId = UUID.randomUUID().toString();
+        String traceId = getTraceId(request);
 
         logger.warn(
                 "AUTH_FAILED traceId={} method={} uri={}",
@@ -278,15 +302,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
+
     /**
-     * Handle all unexpected exceptions
+     * Handle unexpected exceptions
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex,
             HttpServletRequest request) {
 
-        String traceId = UUID.randomUUID().toString();
+        String traceId = getTraceId(request);
 
         logger.error(
                 "UNEXPECTED_ERROR traceId={} method={} uri={} message={}",
@@ -305,20 +330,22 @@ public class GlobalExceptionHandler {
                 traceId
         );
 
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(
+                response,
+                HttpStatus.INTERNAL_SERVER_ERROR
+        );
     }
 
+
     /**
-    * Handle AccessDeniedException
-    *
-    * User is authenticated but does not have permission.
-    */
+     * Handle AccessDeniedException
+     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(
             AccessDeniedException ex,
             HttpServletRequest request) {
 
-        String traceId = UUID.randomUUID().toString();
+        String traceId = getTraceId(request);
 
         logger.warn(
                 "ACCESS_DENIED traceId={} method={} uri={}",
