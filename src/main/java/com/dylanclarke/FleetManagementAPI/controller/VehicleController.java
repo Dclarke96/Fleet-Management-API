@@ -1,5 +1,6 @@
 package com.dylanclarke.FleetManagementAPI.controller;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -78,7 +79,7 @@ public class VehicleController {
     })
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<VehicleResponseDTO>>> getAllVehicles(
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
 
         Page<VehicleResponseDTO> page = service.getAllVehicles(pageable);
 
@@ -175,7 +176,7 @@ public class VehicleController {
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponse<VehicleResponseDTO>>> searchVehicles(
             @RequestParam("q") String query,
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
 
         Page<VehicleResponseDTO> page =
                 service.searchVehicles(query, pageable);

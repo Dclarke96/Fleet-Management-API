@@ -12,12 +12,12 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import com.dylanclarke.FleetManagementAPI.dto.ErrorResponse;
 import com.dylanclarke.FleetManagementAPI.exception.AuthenticationException;
 import com.dylanclarke.FleetManagementAPI.exception.ValidationException;
-
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -232,6 +232,35 @@ public class GlobalExceptionHandler {
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
+                ex.getMessage(),
+                request.getRequestURI(),
+                traceId
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+    * Handle invalid sort properties
+    */
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ErrorResponse> handlePropertyReferenceException(
+            PropertyReferenceException ex,
+            HttpServletRequest request) {
+
+        String traceId = getTraceId(request);
+
+        logger.warn(
+                "INVALID_SORT_PROPERTY traceId={} method={} uri={} message={}",
+                traceId,
+                request.getMethod(),
+                request.getRequestURI(),
+                ex.getMessage()
+        );
+
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Invalid Sort Property",
                 ex.getMessage(),
                 request.getRequestURI(),
                 traceId
