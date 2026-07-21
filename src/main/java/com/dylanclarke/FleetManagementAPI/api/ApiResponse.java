@@ -2,11 +2,34 @@ package com.dylanclarke.FleetManagementAPI.api;
 
 import java.time.LocalDateTime;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class ApiResponse<T> {
 
+    @Schema(
+            description = "Indicates whether the request completed successfully",
+            example = "true"
+    )
     private boolean success;
+
+
+    @Schema(
+            description = "Response payload",
+            nullable = true
+    )
     private T data;
+
+
+    @Schema(
+            description = "Human-readable response message",
+            example = "Vehicle retrieved successfully"
+    )
     private String message;
+
+
+    @Schema(
+            description = "Time the response was generated"
+    )
     private LocalDateTime timestamp;
 
 

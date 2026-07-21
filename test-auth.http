@@ -1,7 +1,7 @@
-@baseUrl = https://fleet-management-api-beff.onrender.com
+@baseUrl = http://localhost:8080
 @username = persistentUser2
 @password = 1234
-@authToken = eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJwZXJzaXN0ZW50VXNlcjIiLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODM3MTgxODcsImV4cCI6MTc4MzcyMTc4N30.7lYU8nRPBjTxj8q9yJpe23BsipXXejrp4qCPcqS1uPhdDAdWYdRVoDlibrZ3yzJ8eFhtP5HNzTwOVdIXYspp4Q
+@authToken = eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJmbGVldC1tYW5hZ2VtZW50LWFwaSIsInN1YiI6InBlcnNpc3RlbnRVc2VyMiIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc4NDU0OTc4OSwiZXhwIjoxNzg0NTUzMzg5fQ.l-7U5ZXBiKkU5HrHdy04DaQlSYSGdyEaLJYjtLIcL5fUTaOwGdbokibGRy5B4zKeTN9FC9s4A-DbtMgudMJ9_w
 @invalidToken = expiredToken123
 
 @usernameB = persistentUserB
@@ -304,5 +304,60 @@ Authorization: Bearer {{authToken}}
 # =====================================================
 GET {{baseUrl}}/api/maintenance
 Authorization: Bearer {{authTokenB}}
+
+###
+
+# =====================================================
+# 🩺 ACTUATOR - HEALTH CHECK
+# =====================================================
+# Verifies application availability and deployment health.
+# Expected: 200 OK
+
+GET {{baseUrl}}/actuator/health
+Authorization: Bearer {{authToken}}
+
+###
+
+# =====================================================
+# 🔒 AUTH - ACCESS PROTECTED ROUTE (VALID TOKEN)
+# =====================================================
+# Verifies JWT authentication works against protected API resources.
+# Expected: 200 OK
+
+GET {{baseUrl}}/api/vehicles
+Authorization: Bearer {{authToken}}
+
+###
+
+# =====================================================
+# 🔒 VEHICLE - PAGINATION VERIFICATION
+# =====================================================
+# Verifies pageable API parameters work correctly.
+# Expected: 200 OK with paginated response structure.
+
+GET {{baseUrl}}/api/vehicles?page=0&size=10
+Authorization: Bearer {{authToken}}
+
+###
+
+# =====================================================
+# 🔒 VEHICLE - PAGINATION WITH SORTING
+# =====================================================
+# Verifies Spring Data sorting support.
+# Replace property names with valid Vehicle fields.
+# Example: title, make, model, vehicleYear
+
+GET {{baseUrl}}/api/vehicles?page=0&size=10&sort=title,asc
+Authorization: Bearer {{authToken}}
+
+###
+
+# =====================================================
+# 🚗 VEHICLE - SEARCH WITH PAGINATION
+# =====================================================
+# Verifies search functionality with pageable results.
+
+GET {{baseUrl}}/api/vehicles/search?q=Manual&page=0&size=10
+Authorization: Bearer {{authToken}}
 
 ###

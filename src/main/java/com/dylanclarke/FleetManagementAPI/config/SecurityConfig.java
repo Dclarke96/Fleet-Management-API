@@ -30,6 +30,17 @@ public class SecurityConfig {
 
     private static final String AUTH_ENDPOINT = "/api/auth/**";
 
+    private static final String[] SWAGGER_ENDPOINTS = {
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/v3/api-docs/**"
+    };
+
+    private static final String[] ACTUATOR_ENDPOINTS = {
+        "/actuator/health",
+        "/actuator/health/**"
+    };
+
     // =========================
     // AUTH MANAGER
     // =========================
@@ -93,7 +104,18 @@ public class SecurityConfig {
                 // AUTHORIZATION
                 // =========================
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(AUTH_ENDPOINT).permitAll()
+                        .requestMatchers(
+                                AUTH_ENDPOINT
+                        ).permitAll()
+
+                        .requestMatchers(
+                                SWAGGER_ENDPOINTS
+                        ).permitAll()
+
+                        .requestMatchers(
+                                ACTUATOR_ENDPOINTS
+                        ).permitAll()
+
                         .anyRequest().authenticated()
                 )
 
