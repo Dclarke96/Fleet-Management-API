@@ -340,6 +340,8 @@ Sensitive configuration values should be provided through environment variables.
 
 Required environment variables vary by active Spring profile.
 
+Copy .env.example to .env (or configure the equivalent environment variables) before starting the application.
+
 ### Local Profile
 
 ```
